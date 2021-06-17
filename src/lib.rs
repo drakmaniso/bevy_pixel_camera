@@ -76,8 +76,6 @@ impl PixelCameraBundle {
     /// Create a component bundle for a camera where the size of virtual pixels
     /// are specified with `zoom`.
     pub fn from_zoom(zoom: i32) -> Self {
-        // we want 0 to be "closest" and +far to be "farthest" in 2d, so we offset
-        // the camera's translation by far and use a right handed coordinate system
         let projection = PixelProjection {
             zoom: zoom,
             ..Default::default()

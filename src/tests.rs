@@ -1,5 +1,6 @@
 use super::*;
 use bevy::math::Vec4;
+use bevy::render::camera::CameraProjection;
 
 #[test]
 fn projection_test_around_240x240() {

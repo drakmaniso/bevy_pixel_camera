@@ -22,7 +22,7 @@
 //!
 //!     let sprite_handle = materials.add(asset_server.load("my-pixel-art-sprite.png").into());
 //!     commands.spawn_bundle(SpriteBundle {
-//!         material: sprite_handle.clone(),
+//!         material: sprite_handle,
 //!         mesh: quad.clone().into(),
 //!         ..Default::default()
 //!     });
@@ -38,6 +38,7 @@ use bevy::render::camera::{self, Camera, CameraProjection, DepthCalculation, Vis
 #[cfg(test)]
 mod tests;
 
+/// Plugin for the camera system and sprite quad resource.
 pub struct PixelCameraPlugin;
 
 impl Plugin for PixelCameraPlugin {
@@ -60,8 +61,8 @@ fn setup_pixel_camera_plugin(mut commands: Commands, mut meshes: ResMut<Assets<M
 
 /// Component bundle for camera entities suitable for pixel-art sprites.
 ///
-/// Use this for pixel-art games. Transforms are expressed using "virtual
-/// pixels", which are mapped to a multiple of actual screen pixels.
+/// Use this for pixel-art games. World coordinates are expressed using virtual
+/// pixels, which are mapped to a multiple of actual screen pixels.
 #[derive(Bundle)]
 pub struct PixelCameraBundle {
     pub camera: Camera,
@@ -72,27 +73,30 @@ pub struct PixelCameraBundle {
 }
 
 impl PixelCameraBundle {
-    /// Create a component bundle for a pixel-perfect orthographic camera, where
-    /// 1 world unit = `zoom` screen pixels.
+    /// Create a component bundle for a camera where the size of virtual pixels
+    /// are specified with `zoom`.
     pub fn from_zoom(zoom: i32) -> Self {
         // we want 0 to be "closest" and +far to be "farthest" in 2d, so we offset
         // the camera's translation by far and use a right handed coordinate system
-        let far = 1000.0;
+        let projection = PixelProjection {
+            zoom: zoom,
+            ..Default::default()
+        };
+        let far = projection.far;
         Self {
             camera: Camera {
                 name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
                 ..Default::default()
             },
-            pixel_projection: PixelProjection {
-                zoom: zoom,
-                ..Default::default()
-            },
+            pixel_projection: projection,
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
         }
     }
 
+    /// Create a component bundle for a camera where the size of virtual pixels
+    /// is automatically set to fit the specified resolution inside the window.
     pub fn from_resolution(width: i32, height: i32) -> Self {
         let far = 1000.0;
         Self {
@@ -111,6 +115,8 @@ impl PixelCameraBundle {
         }
     }
 
+    /// Create a component bundle for a camera where the size of virtual pixels
+    /// is automatically set to fit the specified width inside the window.
     pub fn from_width(width: i32) -> Self {
         let far = 1000.0;
         Self {
@@ -128,6 +134,8 @@ impl PixelCameraBundle {
         }
     }
 
+    /// Create a component bundle for a camera where the size of virtual pixels
+    /// is automatically set to fit the specified height inside the window.
     pub fn from_height(height: i32) -> Self {
         let far = 1000.0;
         Self {
@@ -146,6 +154,11 @@ impl PixelCameraBundle {
     }
 }
 
+/// Component for a pixel-perfect orthographic projection.
+///
+/// It is similar to Bevy's OrthographicProjection, except integral world
+/// coordinates are always aligned with virtual pixels (as defined by the zoom
+/// field).
 #[derive(Debug, Clone, Reflect)]
 #[reflect(Component)]
 pub struct PixelProjection {
@@ -155,9 +168,21 @@ pub struct PixelProjection {
     pub top: f32,
     pub near: f32,
     pub far: f32,
+
+    /// If present, `zoom` will be automatically updated to always fit
+    /// `desired_width` in the window as best as possible.
     pub desired_width: Option<i32>,
+
+    /// If present, `zoom` will be automatically updated to always fit
+    /// `desired_height` in the window as best as possible.
     pub desired_height: Option<i32>,
+
+    /// If neither `desired_width` nor `desired_height` are present, zoom can be
+    /// manually set. The value detemines the size of the virtual pixels.
     pub zoom: i32,
+
+    // If true, (0, 0) is the pixel closest to the center of the windoe,
+    // otherwise it's at bottom left.
     pub centered: bool,
 }
 
@@ -222,7 +247,6 @@ impl Default for PixelProjection {
             top: 1.0,
             near: 0.0,
             far: 1000.0,
-            /// If present,
             desired_width: None,
             desired_height: None,
             zoom: 1,
@@ -234,6 +258,8 @@ impl Default for PixelProjection {
 use bevy::math::vec2;
 use bevy::render::mesh::Indices;
 
+/// Resource inserted by `PixelCameraPlugin`, to replace bevy's default mesh for
+/// sprite bundles.
 #[derive(Clone)]
 pub struct PixelSpriteQuad(Handle<Mesh>);
 

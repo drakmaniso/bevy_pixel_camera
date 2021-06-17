@@ -31,7 +31,7 @@
 
 use bevy::prelude::{
     AppBuilder, Assets, Bundle, Commands, CoreStage, GlobalTransform, Handle, IntoSystem, Mat4,
-    Mesh, Plugin, Reflect, ReflectComponent, ResMut, StartupStage, Transform, Vec2,
+    Mesh, Plugin, Reflect, ReflectComponent, ResMut, StartupStage, Transform,
 };
 use bevy::render::camera::{self, Camera, CameraProjection, DepthCalculation, VisibleEntities};
 
@@ -71,6 +71,8 @@ pub struct PixelCameraBundle {
 }
 
 impl PixelCameraBundle {
+    /// Create a component bundle for a pixel-perfect orthographic camera, where
+    /// 1 world unit = `zoom` screen pixels.
     pub fn from_zoom(zoom: i32) -> Self {
         // we want 0 to be "closest" and +far to be "farthest" in 2d, so we offset
         // the camera's translation by far and use a right handed coordinate system
@@ -81,7 +83,7 @@ impl PixelCameraBundle {
                 ..Default::default()
             },
             pixel_projection: PixelProjection {
-                zoom: zoom as f32,
+                zoom: zoom,
                 ..Default::default()
             },
             visible_entities: Default::default(),
@@ -146,32 +148,28 @@ impl PixelCameraBundle {
 #[derive(Debug, Clone, Reflect)]
 #[reflect(Component)]
 pub struct PixelProjection {
+    pub left: f32,
+    pub right: f32,
+    pub bottom: f32,
+    pub top: f32,
+    pub near: f32,
     pub far: f32,
     pub desired_width: Option<i32>,
     pub desired_height: Option<i32>,
-    pub actual_resolution: Vec2,
-    pub zoom: f32,
+    pub zoom: i32,
     pub centered: bool,
 }
 
 impl CameraProjection for PixelProjection {
     fn get_projection_matrix(&self) -> Mat4 {
-        if self.centered {
-            let left = -((self.actual_resolution.x as i32) / 2) as f32;
-            let right = left + self.actual_resolution.x;
-            let bottom = -((self.actual_resolution.y as i32) / 2) as f32;
-            let top = bottom + self.actual_resolution.y;
-            Mat4::orthographic_rh(left, right, bottom, top, 0.0, self.far)
-        } else {
-            Mat4::orthographic_rh(
-                0.0,
-                self.actual_resolution.x,
-                0.0,
-                self.actual_resolution.y,
-                0.0,
-                self.far,
-            )
-        }
+        Mat4::orthographic_rh(
+            self.left,
+            self.right,
+            self.bottom,
+            self.top,
+            self.near,
+            self.far,
+        )
     }
 
     fn update(&mut self, width: f32, height: f32) {
@@ -188,12 +186,25 @@ impl CameraProjection for PixelProjection {
             }
         }
         match (zoom_x, zoom_y) {
-            (Some(zoom_x), Some(zoom_y)) => self.zoom = zoom_x.min(zoom_y).max(1) as f32,
-            (Some(zoom_x), None) => self.zoom = zoom_x.max(1) as f32,
-            (None, Some(zoom_y)) => self.zoom = zoom_y.max(1) as f32,
+            (Some(zoom_x), Some(zoom_y)) => self.zoom = zoom_x.min(zoom_y).max(1),
+            (Some(zoom_x), None) => self.zoom = zoom_x.max(1),
+            (None, Some(zoom_y)) => self.zoom = zoom_y.max(1),
             (None, None) => (),
         }
-        self.actual_resolution = Vec2::new(width, height) / self.zoom;
+
+        let actual_width = width / (self.zoom as f32);
+        let actual_height = height / (self.zoom as f32);
+        if self.centered {
+            self.left = -((actual_width as i32) / 2) as f32;
+            self.right = self.left + actual_width;
+            self.bottom = -((actual_height as i32) / 2) as f32;
+            self.top = self.bottom + actual_height;
+        } else {
+            self.left = 0.0;
+            self.right = actual_width;
+            self.bottom = 0.0;
+            self.top = actual_height;
+        }
     }
 
     fn depth_calculation(&self) -> DepthCalculation {
@@ -204,11 +215,16 @@ impl CameraProjection for PixelProjection {
 impl Default for PixelProjection {
     fn default() -> Self {
         Self {
+            left: -1.0,
+            right: 1.0,
+            bottom: -1.0,
+            top: 1.0,
+            near: 0.0,
             far: 1000.0,
+            /// If present,
             desired_width: None,
             desired_height: None,
-            actual_resolution: Vec2::new(1.0, 1.0),
-            zoom: 1.0,
+            zoom: 1,
             centered: true,
         }
     }
@@ -402,7 +418,7 @@ mod tests {
     fn projection_test_for_width_height_zoom(width: i32, height: i32, zoom: i32) {
         let mut window_projection = bevy::render::camera::OrthographicProjection::default();
         let mut virtual_projection = PixelProjection {
-            zoom: zoom as f32,
+            zoom: zoom,
             ..Default::default()
         };
         virtual_projection.update(width as f32, height as f32);

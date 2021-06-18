@@ -21,7 +21,7 @@ bottom-left corner of the image.
 
 ### Example code
 
-```no_compile
+```rs
 use bevy::prelude::*;
 use bevy_pixel_camera::
 

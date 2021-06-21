@@ -18,10 +18,13 @@ const CLOUD_HEIGHT: f32 = 18.0;
 const PILLAR_WIDTH: f32 = 19.0;
 const PILLAR_HEIGHT: f32 = 480.0;
 const PILLAR_SPACING: f32 = 80.0;
-const _PILLAR_GAP: f32 = 70.0;
+const PILLAR_GAP: f32 = 70.0;
 const PILLAR_RANGE: f32 = 100.0;
 
 const BIRD_X: f32 = -80.0;
+const BIRD_DX: f32 = 14.0;
+const BIRD_DY: f32 = 10.0;
+const BIRD_RADIUS: f32 = 8.0;
 
 const FRAME: f64 = 1.0 / 60.0;
 
@@ -59,6 +62,7 @@ fn main() {
         .add_plugin(PixelCameraPlugin)
         .insert_resource(Rng { mz: 0, mw: 0 })
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+        .insert_resource(Timer::from_seconds(0.25, false))
         .add_startup_system(setup.system().label("setup"))
         .add_startup_system(spawn_clouds.system().after("setup"))
         .add_system(bevy::input::system::exit_on_esc_system.system())
@@ -284,10 +288,33 @@ fn flap(
 fn collision_detection(
     mut state: ResMut<State<GameState>>,
     birds: Query<&Transform, With<Bird>>,
-    _pillars: Query<&Transform, With<Pillar>>,
+    pillars: Query<&Transform, With<Pillar>>,
 ) {
-    for transform in birds.iter() {
-        if transform.translation.y < BOTTOM {
+    for bird_transform in birds.iter() {
+        let bird_x = bird_transform.translation.x + BIRD_DX;
+        let bird_y = bird_transform.translation.y + BIRD_DY;
+        let collides = pillars.iter().any(|&pillar_transform| {
+            let pillar_x = pillar_transform.translation.x;
+            let pillar_y = pillar_transform.translation.y + PILLAR_HEIGHT / 2.0;
+            circle_box_collide(
+                bird_x,
+                bird_y,
+                BIRD_RADIUS,
+                pillar_x,
+                pillar_x + PILLAR_WIDTH,
+                pillar_y + PILLAR_GAP / 2.0,
+                pillar_y + PILLAR_HEIGHT,
+            ) || circle_box_collide(
+                bird_x,
+                bird_y,
+                BIRD_RADIUS,
+                pillar_x,
+                pillar_x + PILLAR_WIDTH,
+                pillar_y - PILLAR_HEIGHT,
+                pillar_y - PILLAR_GAP / 2.0,
+            )
+        });
+        if collides || bird_y < BOTTOM {
             state
                 .set(GameState::GameOver)
                 .expect("Problem while switching to game over state");
@@ -295,14 +322,38 @@ fn collision_detection(
     }
 }
 
+fn circle_box_collide(
+    cx: f32,
+    cy: f32,
+    radius: f32,
+    left: f32,
+    right: f32,
+    bottom: f32,
+    top: f32,
+) -> bool {
+    let closest_x = clamp(cx, left, right);
+    let closest_y = clamp(cy, bottom, top);
+    let distance_squared =
+        (cx - closest_x) * (cx - closest_x) + (cy - closest_y) * (cy - closest_y);
+    distance_squared < radius * radius
+}
+
+fn clamp(v: f32, lower: f32, upper: f32) -> f32 {
+    lower.max(upper.min(v))
+}
+
 fn press_to_start(
     mut key_events: EventReader<KeyboardInput>,
     mut state: ResMut<State<GameState>>,
+    time: Res<Time>,
+    mut timer: ResMut<Timer>,
     mut birds: Query<(&mut Transform, &mut BirdPhysics), With<Bird>>,
 ) {
-    if key_events
-        .iter()
-        .any(|ev| ev.state == ElementState::Pressed)
+    timer.tick(time.delta());
+    if timer.finished()
+        && key_events
+            .iter()
+            .any(|ev| ev.state == ElementState::Pressed)
     {
         for (mut transform, mut physics) in birds.iter_mut() {
             *transform = Transform::from_xyz(BIRD_X, 0.0, 1.0);
@@ -315,7 +366,8 @@ fn press_to_start(
     }
 }
 
-fn game_over(mut birds: Query<&mut TextureAtlasSprite, With<Bird>>) {
+fn game_over(mut timer: ResMut<Timer>, mut birds: Query<&mut TextureAtlasSprite, With<Bird>>) {
+    timer.reset();
     for mut sprite in birds.iter_mut() {
         sprite.index = 3;
     }

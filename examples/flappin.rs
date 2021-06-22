@@ -1,8 +1,4 @@
-use bevy::{
-    core::FixedTimestep,
-    input::{keyboard::KeyboardInput, ElementState},
-    prelude::*,
-};
+use bevy::{core::FixedTimestep, prelude::*};
 use bevy_pixel_camera::{PixelCameraBundle, PixelCameraPlugin, PixelSpriteQuad};
 
 // GAME CONSTANTS /////////////////////////////////////////////////////////////
@@ -46,6 +42,7 @@ enum GameState {
 fn main() {
     App::build()
         .add_state(GameState::StartScreen)
+        .add_event::<ActionEvent>()
         .insert_resource(WindowDescriptor {
             title: "Flappin'".to_string(),
             width: 720.0,
@@ -62,6 +59,7 @@ fn main() {
         .add_startup_system(spawn_bird.system().after("setup"))
         .add_startup_system(spawn_clouds.system().after("setup"))
         .add_system(bevy::input::system::exit_on_esc_system.system())
+        .add_system(on_press.system())
         .add_system_set(
             SystemSet::on_update(GameState::StartScreen)
                 .with_system(animate_flying_bird.system())
@@ -106,21 +104,37 @@ fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
     ));
 }
 
+// INPUT MAPPING //////////////////////////////////////////////////////////////
+
+struct ActionEvent;
+
+fn on_press(
+    keyboard: Res<Input<KeyCode>>,
+    mouse_buttons: Res<Input<MouseButton>>,
+    gamepad_buttons: Res<Input<GamepadButton>>,
+    touches: Res<Touches>,
+    mut events: EventWriter<ActionEvent>,
+) {
+    if keyboard.get_just_pressed().next().is_some()
+        || mouse_buttons.get_just_pressed().next().is_some()
+        || gamepad_buttons.get_just_pressed().next().is_some()
+        || touches.iter_just_pressed().next().is_some()
+    {
+        events.send(ActionEvent);
+    }
+}
+
 // START SCREEN ///////////////////////////////////////////////////////////////
 
 fn press_to_start(
-    mut key_events: EventReader<KeyboardInput>,
+    mut action_events: EventReader<ActionEvent>,
     mut state: ResMut<State<GameState>>,
     time: Res<Time>,
     mut timer: ResMut<Timer>,
     mut birds: Query<(&mut Transform, &mut BirdPhysics), With<Bird>>,
 ) {
     timer.tick(time.delta());
-    if timer.finished()
-        && key_events
-            .iter()
-            .any(|ev| ev.state == ElementState::Pressed)
-    {
+    if timer.finished() && action_events.iter().next().is_some() {
         for (mut transform, mut physics) in birds.iter_mut() {
             *transform = Transform::from_xyz(BIRD_X, 0.0, 1.0);
             physics.velocity = FLAP_VELOCITY;
@@ -204,13 +218,10 @@ fn animate_flappin_bird(
 }
 
 fn flap(
-    mut key_events: EventReader<KeyboardInput>,
+    mut action_events: EventReader<ActionEvent>,
     mut birds: Query<&mut BirdPhysics, With<Bird>>,
 ) {
-    if key_events
-        .iter()
-        .any(|ev| ev.state == ElementState::Pressed)
-    {
+    if action_events.iter().next().is_some() {
         for mut physics in birds.iter_mut() {
             physics.velocity = FLAP_VELOCITY;
             physics.acceleration = FLAP_ACCELERATION;

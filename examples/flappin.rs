@@ -1,5 +1,5 @@
 use bevy::{core::FixedTimestep, prelude::*};
-use bevy_pixel_camera::{PixelCameraBundle, PixelCameraPlugin, PixelSpriteQuad};
+use bevy_pixel_camera::{PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin, PixelSpriteQuad};
 
 // GAME CONSTANTS /////////////////////////////////////////////////////////////
 
@@ -17,7 +17,7 @@ const PILLAR_WIDTH: f32 = 19.0;
 const PILLAR_HEIGHT: f32 = 480.0;
 const PILLAR_SPACING: f32 = 80.0;
 const PILLAR_GAP: f32 = 70.0;
-const PILLAR_RANGE: f32 = 100.0;
+const PILLAR_RANGE: f32 = 105.0;
 
 const BIRD_X: f32 = -80.0;
 const BIRD_DX: f32 = 14.0;
@@ -52,6 +52,9 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(PixelCameraPlugin)
+        .add_plugin(PixelBorderPlugin {
+            color: Color::rgb(0.1, 0.1, 0.1),
+        })
         .insert_resource(Rng { mz: 0, mw: 0 })
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
         .insert_resource(Timer::from_seconds(0.25, false))

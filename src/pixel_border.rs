@@ -1,7 +1,8 @@
-use bevy::{prelude::*, window::WindowResized};
+use bevy::prelude::*;
 
 use crate::{PixelProjection, PixelSpriteQuad};
 
+// Plugin that will put a border around the desired resolution
 pub struct PixelBorderPlugin {
     pub color: Color,
 }
@@ -68,57 +69,53 @@ fn spawn_borders(
 }
 
 fn resize_borders(
-    mut resize_events: EventReader<WindowResized>,
-    cameras: Query<&PixelProjection>,
+    cameras: Query<&PixelProjection, Changed<PixelProjection>>,
     mut borders: Query<(&mut Sprite, &mut Transform, &Border)>,
 ) {
     if let Some(projection) = cameras.iter().next() {
-        let zoom = projection.zoom as f32;
         let z = projection.far - 0.2;
-        for ev in resize_events.iter().filter(|ev| ev.id.is_primary()) {
-            let win_width = ev.width / zoom;
-            let win_height = ev.height / zoom;
-            let virtual_width = projection
-                .desired_width
-                .map(|w| w as f32)
-                .unwrap_or(win_width);
-            let virtual_height = projection
-                .desired_height
-                .map(|h| h as f32)
-                .unwrap_or(win_height);
-            let left_width = ((win_width - virtual_width) / 2.0).round();
-            let right_width = win_width - virtual_width - left_width;
-            let bottom_height = ((win_height - virtual_height) / 2.0).round();
-            let top_height = win_height - virtual_height - bottom_height;
-            for (mut sprite, mut transform, border) in borders.iter_mut() {
-                match border {
-                    Border::Left => {
-                        *transform =
-                            Transform::from_xyz(projection.left - EXTRA, projection.bottom, z);
-                        sprite.size = Vec2::new(left_width + EXTRA, win_height);
-                    }
-                    Border::Right => {
-                        *transform = Transform::from_xyz(
-                            projection.right - right_width,
-                            projection.bottom,
-                            z,
-                        );
-                        sprite.size = Vec2::new(right_width + EXTRA, win_height);
-                    }
-                    Border::Top => {
-                        *transform =
-                            Transform::from_xyz(projection.left, projection.top - top_height, z);
-                        sprite.size = Vec2::new(win_width, top_height + EXTRA);
-                    }
-                    Border::Bottom => {
-                        *transform =
-                            Transform::from_xyz(projection.left, projection.bottom - EXTRA, z);
-                        sprite.size = Vec2::new(win_width, top_height + EXTRA);
-                    }
+        let width = projection.desired_width.map(|w| w as f32).unwrap_or(0.0);
+        let height = projection.desired_height.map(|h| h as f32).unwrap_or(0.0);
+        let left = if projection.centered {
+            -(width / 2.0).round()
+        } else {
+            0.0
+        };
+        let right = if projection.centered {
+            left + width
+        } else {
+            0.0
+        };
+        let bottom = if projection.centered {
+            (-height / 2.0).round()
+        } else {
+            0.0
+        };
+        let top = if projection.centered {
+            bottom + height
+        } else {
+            0.0
+        };
+
+        for (mut sprite, mut transform, border) in borders.iter_mut() {
+            match border {
+                Border::Left => {
+                    *transform = Transform::from_xyz(left - width, bottom - height, z);
+                    sprite.size = Vec2::new(width, 3.0 * height);
+                }
+                Border::Right => {
+                    *transform = Transform::from_xyz(right, bottom - height, z);
+                    sprite.size = Vec2::new(width, 3.0 * height);
+                }
+                Border::Top => {
+                    *transform = Transform::from_xyz(left - width, top, z);
+                    sprite.size = Vec2::new(3.0 * width, height);
+                }
+                Border::Bottom => {
+                    *transform = Transform::from_xyz(left - width, bottom - height, z);
+                    sprite.size = Vec2::new(3.0 * width, height);
                 }
             }
         }
     }
 }
-
-const EXTRA: f32 = 32.0;

@@ -9,7 +9,7 @@ repository = "https://github.com/drakmaniso/bevy_pixel_camera"
 keywords = ["bevy", "graphics", "2d", "pixels", "pixel-art"]
 categories = ["graphics", "game-development"]
 exclude = ["assets/**", ".vscode/**"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

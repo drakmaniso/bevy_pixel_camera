@@ -1,10 +1,10 @@
 use bevy::prelude::{Bundle, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform};
 use bevy::render::camera::{Camera, CameraProjection, DepthCalculation, VisibleEntities};
 
-/// Component bundle for camera entities suitable for pixel-art sprites.
+/// Provides the components for the camera entity.
 ///
-/// Use this for pixel-art games. World coordinates are expressed using virtual
-/// pixels, which are mapped to a multiple of actual screen pixels.
+/// When using this camera, world coordinates are expressed using virtual
+/// pixels, which are always mapped to a multiple of actual screen pixels.
 #[derive(Bundle)]
 pub struct PixelCameraBundle {
     pub camera: Camera,

@@ -3,7 +3,7 @@ use bevy::prelude::{
 };
 use bevy::render::camera;
 
-/// Plugin for the camera system and sprite quad resource.
+/// Provides the camera system, and the quad resource for sprite meshes.
 pub struct PixelCameraPlugin;
 
 impl Plugin for PixelCameraPlugin {
@@ -51,14 +51,9 @@ fn make_quad() -> Mesh {
     let south_east = vec2(1.0, 0.0);
     let vertices = [
         (
-            [south_east.x, south_east.y, 0.0],
+            [south_west.x, south_west.y, 0.0],
             [0.0, 0.0, 1.0],
-            [1.0, 1.0],
-        ),
-        (
-            [north_east.x, north_east.y, 0.0],
-            [0.0, 0.0, 1.0],
-            [1.0, 0.0],
+            [0.0, 1.0],
         ),
         (
             [north_west.x, north_west.y, 0.0],
@@ -66,9 +61,14 @@ fn make_quad() -> Mesh {
             [0.0, 0.0],
         ),
         (
-            [south_west.x, south_west.y, 0.0],
+            [north_east.x, north_east.y, 0.0],
             [0.0, 0.0, 1.0],
-            [0.0, 1.0],
+            [1.0, 0.0],
+        ),
+        (
+            [south_east.x, south_east.y, 0.0],
+            [0.0, 0.0, 1.0],
+            [1.0, 1.0],
         ),
     ];
 

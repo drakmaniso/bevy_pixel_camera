@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{PixelProjection, PixelSpriteQuad};
 
-// Plugin that will put a border around the desired resolution
+/// Provides an opaque border around the desired resolution.
 pub struct PixelBorderPlugin {
     pub color: Color,
 }

@@ -3,7 +3,7 @@ use bevy::prelude::{
 };
 use bevy::render::camera;
 
-/// Plugin for the camera system and sprite quad resource.
+/// Provides the camera system, and the quad resource for sprite meshes.
 pub struct PixelCameraPlugin;
 
 impl Plugin for PixelCameraPlugin {

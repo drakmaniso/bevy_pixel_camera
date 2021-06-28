@@ -78,6 +78,11 @@ fn setup(
 }
 ```
 
+Run examples with 
+cargo run --example flappin
+or
+cargo run --example mire
+
 ### License
 
 Licensed under either of

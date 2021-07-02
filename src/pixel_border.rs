@@ -11,7 +11,7 @@ impl Plugin for PixelBorderPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.insert_resource(BorderColor(self.color))
             .add_startup_system(spawn_borders.system())
-            .add_system(resize_borders.system());
+            .add_system_to_stage(CoreStage::PostUpdate, resize_borders.system());
     }
 }
 
@@ -69,33 +69,30 @@ fn spawn_borders(
 }
 
 fn resize_borders(
-    cameras: Query<&PixelProjection, Changed<PixelProjection>>,
-    mut borders: Query<(&mut Sprite, &mut Transform, &Border)>,
+    cameras: Query<
+        (&PixelProjection, &Transform),
+        Or<(Changed<PixelProjection>, Changed<Transform>)>,
+    >,
+    mut borders: Query<(&mut Sprite, &mut Transform, &Border), Without<PixelProjection>>,
 ) {
-    if let Some(projection) = cameras.iter().next() {
+    if let Some((projection, transform)) = cameras.iter().next() {
         let z = projection.far - 0.2;
         let width = projection.desired_width.map(|w| w as f32).unwrap_or(0.0);
         let height = projection.desired_height.map(|h| h as f32).unwrap_or(0.0);
-        let left = if projection.centered {
-            -(width / 2.0).round()
-        } else {
-            0.0
-        };
-        let right = if projection.centered {
-            left + width
-        } else {
-            0.0
-        };
-        let bottom = if projection.centered {
-            (-height / 2.0).round()
-        } else {
-            0.0
-        };
-        let top = if projection.centered {
-            bottom + height
-        } else {
-            0.0
-        };
+        let left = transform.translation.x
+            + if projection.centered {
+                -(width / 2.0).round()
+            } else {
+                0.0
+            };
+        let right = left + width;
+        let bottom = transform.translation.y
+            + if projection.centered {
+                (-height / 2.0).round()
+            } else {
+                0.0
+            };
+        let top = bottom + height;
 
         for (mut sprite, mut transform, border) in borders.iter_mut() {
             match border {

@@ -1,5 +1,6 @@
-use bevy::prelude::{Bundle, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform};
-use bevy::render::camera::{Camera, CameraProjection, DepthCalculation, VisibleEntities};
+use bevy::prelude::{Bundle, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform, Component};
+use bevy::render::camera::{Camera, CameraPlugin, CameraProjection, DepthCalculation };
+use bevy::render::view::VisibleEntities;
 
 /// Provides the components for the camera entity.
 ///
@@ -25,7 +26,7 @@ impl PixelCameraBundle {
         let far = projection.far;
         Self {
             camera: Camera {
-                name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
+                name: Some(CameraPlugin::CAMERA_2D.to_string()),
                 ..Default::default()
             },
             pixel_projection: projection,
@@ -41,7 +42,7 @@ impl PixelCameraBundle {
         let far = 1000.0;
         Self {
             camera: Camera {
-                name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
+                name: Some(CameraPlugin::CAMERA_2D.to_string()),
                 ..Default::default()
             },
             pixel_projection: PixelProjection {
@@ -61,7 +62,7 @@ impl PixelCameraBundle {
         let far = 1000.0;
         Self {
             camera: Camera {
-                name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
+                name: Some(CameraPlugin::CAMERA_2D.to_string()),
                 ..Default::default()
             },
             pixel_projection: PixelProjection {
@@ -80,7 +81,7 @@ impl PixelCameraBundle {
         let far = 1000.0;
         Self {
             camera: Camera {
-                name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
+                name: Some(CameraPlugin::CAMERA_2D.to_string()),
                 ..Default::default()
             },
             pixel_projection: PixelProjection {
@@ -99,7 +100,7 @@ impl PixelCameraBundle {
 /// It is similar to Bevy's OrthographicProjection, except integral world
 /// coordinates are always aligned with virtual pixels (as defined by the zoom
 /// field).
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Component)]
 #[reflect(Component)]
 pub struct PixelProjection {
     pub left: f32,
@@ -175,6 +176,10 @@ impl CameraProjection for PixelProjection {
 
     fn depth_calculation(&self) -> DepthCalculation {
         DepthCalculation::ZDifference
+    }
+
+    fn far(&self) -> f32 {
+        self.far
     }
 }
 

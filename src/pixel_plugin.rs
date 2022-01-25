@@ -1,13 +1,11 @@
-use bevy::prelude::{
-    AppBuilder, Assets, Commands, CoreStage, Handle, IntoSystem, Mesh, Plugin, ResMut, StartupStage,
-};
+use bevy::prelude::{App, Assets, Commands, CoreStage, Handle, IntoSystem, Mesh, Plugin, ResMut, StartupStage};
 use bevy::render::camera;
 
 /// Provides the camera system, and the quad resource for sprite meshes.
 pub struct PixelCameraPlugin;
 
 impl Plugin for PixelCameraPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_startup_system_to_stage(
             StartupStage::PreStartup,
             setup_pixel_camera_plugin.system(),
@@ -26,6 +24,7 @@ fn setup_pixel_camera_plugin(mut commands: Commands, mut meshes: ResMut<Assets<M
 
 use bevy::math::vec2;
 use bevy::render::mesh::Indices;
+use bevy::render::render_resource::PrimitiveTopology;
 
 /// Resource inserted by `PixelCameraPlugin`, to replace bevy's default mesh for
 /// sprite bundles.
@@ -83,7 +82,7 @@ fn make_quad() -> Mesh {
         uvs.push(*uv);
     }
 
-    let mut mesh = Mesh::new(bevy::render::pipeline::PrimitiveTopology::TriangleList);
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
     mesh.set_indices(Some(indices));
     mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, positions);
     mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, normals);

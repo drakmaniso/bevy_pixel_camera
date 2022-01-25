@@ -8,7 +8,7 @@ pub struct PixelBorderPlugin {
 }
 
 impl Plugin for PixelBorderPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(BorderColor(self.color))
             .add_startup_system(spawn_borders.system())
             .add_system_to_stage(CoreStage::PostUpdate, resize_borders.system());
@@ -20,6 +20,7 @@ impl Plugin for PixelBorderPlugin {
 struct BorderColor(Color);
 
 // Component
+#[derive(Component)]
 enum Border {
     Left,
     Right,

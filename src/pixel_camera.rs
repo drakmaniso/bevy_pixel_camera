@@ -1,5 +1,7 @@
-use bevy::prelude::{Bundle, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform, Component};
-use bevy::render::camera::{Camera, CameraPlugin, CameraProjection, DepthCalculation };
+use bevy::prelude::{
+    Bundle, Component, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform,
+};
+use bevy::render::camera::{Camera, Camera2d, CameraProjection, DepthCalculation};
 use bevy::render::view::VisibleEntities;
 
 /// Provides the components for the camera entity.
@@ -13,6 +15,7 @@ pub struct PixelCameraBundle {
     pub visible_entities: VisibleEntities,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
+    pub marker: Camera2d,
 }
 
 impl PixelCameraBundle {
@@ -25,14 +28,12 @@ impl PixelCameraBundle {
         };
         let far = projection.far;
         Self {
-            camera: Camera {
-                name: Some(CameraPlugin::CAMERA_2D.to_string()),
-                ..Default::default()
-            },
+            camera: Camera::default(),
             pixel_projection: projection,
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
+            marker: Camera2d,
         }
     }
 
@@ -41,10 +42,8 @@ impl PixelCameraBundle {
     pub fn from_resolution(width: i32, height: i32) -> Self {
         let far = 1000.0;
         Self {
-            camera: Camera {
-                name: Some(CameraPlugin::CAMERA_2D.to_string()),
-                ..Default::default()
-            },
+            camera: Camera::default(),
+
             pixel_projection: PixelProjection {
                 desired_width: Some(width),
                 desired_height: Some(height),
@@ -53,6 +52,7 @@ impl PixelCameraBundle {
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
+            marker: Camera2d,
         }
     }
 
@@ -61,10 +61,7 @@ impl PixelCameraBundle {
     pub fn from_width(width: i32) -> Self {
         let far = 1000.0;
         Self {
-            camera: Camera {
-                name: Some(CameraPlugin::CAMERA_2D.to_string()),
-                ..Default::default()
-            },
+            camera: Camera::default(),
             pixel_projection: PixelProjection {
                 desired_width: Some(width),
                 ..Default::default()
@@ -72,6 +69,7 @@ impl PixelCameraBundle {
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
+            marker: Camera2d,
         }
     }
 
@@ -80,10 +78,7 @@ impl PixelCameraBundle {
     pub fn from_height(height: i32) -> Self {
         let far = 1000.0;
         Self {
-            camera: Camera {
-                name: Some(CameraPlugin::CAMERA_2D.to_string()),
-                ..Default::default()
-            },
+            camera: Camera::default(),
             pixel_projection: PixelProjection {
                 desired_height: Some(height),
                 ..Default::default()
@@ -91,6 +86,7 @@ impl PixelCameraBundle {
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
+            marker: Camera2d,
         }
     }
 }

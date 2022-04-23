@@ -11,13 +11,11 @@
 //! This plugin provides a camera which can be easily configured by specifying
 //! either the size of the virtual pixels, or the desired resolution.
 //!
-//! It also includes a quad mesh resource to replace the default one used in
-//! Bevy's `SpriteBundle`. The default quad has its origin at the center of the
-//! image, but if the image has an odd width or height, that origin is not
-//! pixel-aligned. The resource included in this plugin puts the origin at the
-//! bottom-left corner of the image.
+//! Note that if either the width or the height of your sprite is not divisible
+//! by 2, you need to change the anchor of the sprite (which is at the center by
+//! default), or it will not be pixel aligned.
 //!
-//! Finally, the crate also includes a separate plugin to put an opaque border
+//! The crate also includes a separate plugin to put an opaque border
 //! around the desired resolution. This way, if the window size is not an exact
 //! multiple of the virtual resolution, anything out of bounds will still be
 //! hidden.
@@ -44,18 +42,19 @@
 //!
 //! ```no_run
 //! use bevy::prelude::*;
+//! use bevy::sprite::Anchor;
 //! use bevy_pixel_camera::{
-//!     PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin, PixelSpriteQuad
+//!     PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin
 //! };
 //!
 //! fn main() {
-//!     App::build()
+//!     App::new()
 //!         .add_plugins(DefaultPlugins)
 //!         .add_plugin(PixelCameraPlugin)
 //!         .add_plugin(PixelBorderPlugin {
 //!             color: Color::rgb(0.1, 0.1, 0.1),
 //!         })
-//!         .add_startup_system(setup.system())
+//!         .add_startup_system(setup)
 //!         .run();
 //! }
 //!
@@ -63,14 +62,16 @@
 //!     mut commands: Commands,
 //!     asset_server: Res<AssetServer>,
 //!     mut materials: ResMut<Assets<ColorMaterial>>,
-//!     quad: Res<PixelSpriteQuad>,
 //! ) {
 //!     commands.spawn_bundle(PixelCameraBundle::from_resolution(320, 240));
 //!
 //!     let sprite_handle = materials.add(asset_server.load("my-pixel-art-sprite.png").into());
 //!     commands.spawn_bundle(SpriteBundle {
-//!         material: sprite_handle,
-//!         mesh: quad.clone().into(),
+//!         texture: asset_server.load("my-pixel-art-sprite.png"),
+//!         sprite: Sprite {
+//!             anchor: Anchor::BottomLeft,
+//!             ..Default::default()
+//!         },
 //!         ..Default::default()
 //!     });
 //! }

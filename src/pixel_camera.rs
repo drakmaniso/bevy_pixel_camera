@@ -1,5 +1,8 @@
-use bevy::prelude::{Bundle, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform};
-use bevy::render::camera::{Camera, CameraProjection, DepthCalculation, VisibleEntities};
+use bevy::prelude::{
+    Bundle, Component, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform,
+};
+use bevy::render::camera::{Camera, Camera2d, CameraProjection, DepthCalculation};
+use bevy::render::view::VisibleEntities;
 
 /// Provides the components for the camera entity.
 ///
@@ -12,6 +15,7 @@ pub struct PixelCameraBundle {
     pub visible_entities: VisibleEntities,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
+    pub marker: Camera2d,
 }
 
 impl PixelCameraBundle {
@@ -24,14 +28,12 @@ impl PixelCameraBundle {
         };
         let far = projection.far;
         Self {
-            camera: Camera {
-                name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
-                ..Default::default()
-            },
+            camera: Camera::default(),
             pixel_projection: projection,
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
+            marker: Camera2d,
         }
     }
 
@@ -40,10 +42,8 @@ impl PixelCameraBundle {
     pub fn from_resolution(width: i32, height: i32) -> Self {
         let far = 1000.0;
         Self {
-            camera: Camera {
-                name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
-                ..Default::default()
-            },
+            camera: Camera::default(),
+
             pixel_projection: PixelProjection {
                 desired_width: Some(width),
                 desired_height: Some(height),
@@ -52,6 +52,7 @@ impl PixelCameraBundle {
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
+            marker: Camera2d,
         }
     }
 
@@ -60,10 +61,7 @@ impl PixelCameraBundle {
     pub fn from_width(width: i32) -> Self {
         let far = 1000.0;
         Self {
-            camera: Camera {
-                name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
-                ..Default::default()
-            },
+            camera: Camera::default(),
             pixel_projection: PixelProjection {
                 desired_width: Some(width),
                 ..Default::default()
@@ -71,6 +69,7 @@ impl PixelCameraBundle {
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
+            marker: Camera2d,
         }
     }
 
@@ -79,10 +78,7 @@ impl PixelCameraBundle {
     pub fn from_height(height: i32) -> Self {
         let far = 1000.0;
         Self {
-            camera: Camera {
-                name: Some(bevy::render::render_graph::base::camera::CAMERA_2D.to_string()),
-                ..Default::default()
-            },
+            camera: Camera::default(),
             pixel_projection: PixelProjection {
                 desired_height: Some(height),
                 ..Default::default()
@@ -90,6 +86,7 @@ impl PixelCameraBundle {
             visible_entities: Default::default(),
             transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
             global_transform: Default::default(),
+            marker: Camera2d,
         }
     }
 }
@@ -99,7 +96,7 @@ impl PixelCameraBundle {
 /// It is similar to Bevy's OrthographicProjection, except integral world
 /// coordinates are always aligned with virtual pixels (as defined by the zoom
 /// field).
-#[derive(Debug, Clone, Reflect)]
+#[derive(Debug, Clone, Reflect, Component)]
 #[reflect(Component)]
 pub struct PixelProjection {
     pub left: f32,
@@ -175,6 +172,10 @@ impl CameraProjection for PixelProjection {
 
     fn depth_calculation(&self) -> DepthCalculation {
         DepthCalculation::ZDifference
+    }
+
+    fn far(&self) -> f32 {
+        self.far
     }
 }
 

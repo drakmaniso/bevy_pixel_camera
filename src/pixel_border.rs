@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use bevy::sprite::Anchor;
 
-use crate::{PixelProjection, PixelSpriteQuad};
+use crate::PixelProjection;
 
 /// Provides an opaque border around the desired resolution.
 pub struct PixelBorderPlugin {
@@ -8,10 +9,10 @@ pub struct PixelBorderPlugin {
 }
 
 impl Plugin for PixelBorderPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.insert_resource(BorderColor(self.color))
-            .add_startup_system(spawn_borders.system())
-            .add_system_to_stage(CoreStage::PostUpdate, resize_borders.system());
+            .add_startup_system(spawn_borders)
+            .add_system_to_stage(CoreStage::PostUpdate, resize_borders);
     }
 }
 
@@ -20,6 +21,7 @@ impl Plugin for PixelBorderPlugin {
 struct BorderColor(Color);
 
 // Component
+#[derive(Component)]
 enum Border {
     Left,
     Right,
@@ -27,43 +29,49 @@ enum Border {
     Bottom,
 }
 
-fn spawn_borders(
-    mut commands: Commands,
-    color: Res<BorderColor>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    quad: Res<PixelSpriteQuad>,
-) {
-    let material = materials.add(color.0.into());
+fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
     commands
         .spawn()
         .insert(Border::Left)
         .insert_bundle(SpriteBundle {
-            material: material.clone(),
-            mesh: quad.clone().into(),
+            sprite: Sprite {
+                anchor: Anchor::BottomLeft,
+                color: color.0,
+                ..Default::default()
+            },
             ..Default::default()
         });
     commands
         .spawn()
         .insert(Border::Right)
         .insert_bundle(SpriteBundle {
-            material: material.clone(),
-            mesh: quad.clone().into(),
+            sprite: Sprite {
+                anchor: Anchor::BottomLeft,
+                color: color.0,
+                ..Default::default()
+            },
             ..Default::default()
         });
     commands
         .spawn()
         .insert(Border::Top)
         .insert_bundle(SpriteBundle {
-            material: material.clone(),
-            mesh: quad.clone().into(),
+            sprite: Sprite {
+                anchor: Anchor::BottomLeft,
+                color: color.0,
+                ..Default::default()
+            },
             ..Default::default()
         });
     commands
         .spawn()
         .insert(Border::Bottom)
         .insert_bundle(SpriteBundle {
-            material: material.clone(),
-            mesh: quad.clone().into(),
+            sprite: Sprite {
+                anchor: Anchor::BottomLeft,
+                color: color.0,
+                ..Default::default()
+            },
             ..Default::default()
         });
 }
@@ -98,19 +106,19 @@ fn resize_borders(
             match border {
                 Border::Left => {
                     *transform = Transform::from_xyz(left - width, bottom - height, z);
-                    sprite.size = Vec2::new(width, 3.0 * height);
+                    sprite.custom_size = Some(Vec2::new(width, 3.0 * height));
                 }
                 Border::Right => {
                     *transform = Transform::from_xyz(right, bottom - height, z);
-                    sprite.size = Vec2::new(width, 3.0 * height);
+                    sprite.custom_size = Some(Vec2::new(width, 3.0 * height));
                 }
                 Border::Top => {
                     *transform = Transform::from_xyz(left - width, top, z);
-                    sprite.size = Vec2::new(3.0 * width, height);
+                    sprite.custom_size = Some(Vec2::new(3.0 * width, height));
                 }
                 Border::Bottom => {
                     *transform = Transform::from_xyz(left - width, bottom - height, z);
-                    sprite.size = Vec2::new(3.0 * width, height);
+                    sprite.custom_size = Some(Vec2::new(3.0 * width, height));
                 }
             }
         }

@@ -65,7 +65,6 @@
 //! ) {
 //!     commands.spawn_bundle(PixelCameraBundle::from_resolution(320, 240));
 //!
-//!     let sprite_handle = materials.add(asset_server.load("my-pixel-art-sprite.png").into());
 //!     commands.spawn_bundle(SpriteBundle {
 //!         texture: asset_server.load("my-pixel-art-sprite.png"),
 //!         sprite: Sprite {

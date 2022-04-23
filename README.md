@@ -46,18 +46,19 @@ drawbacks to both approaches:
 
 ```rust
 use bevy::prelude::*;
+use bevy::sprite::Anchor;
 use bevy_pixel_camera::{
-    PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin, PixelSpriteQuad
+    PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin
 };
 
 fn main() {
-    App::build()
+    App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(PixelCameraPlugin)
         .add_plugin(PixelBorderPlugin {
             color: Color::rgb(0.1, 0.1, 0.1),
         })
-        .add_startup_system(setup.system())
+        .add_startup_system(setup)
         .run();
 }
 
@@ -65,14 +66,14 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    quad: Res<PixelSpriteQuad>,
 ) {
     commands.spawn_bundle(PixelCameraBundle::from_resolution(320, 240));
-
-    let sprite_handle = materials.add(asset_server.load("my-pixel-art-sprite.png").into());
     commands.spawn_bundle(SpriteBundle {
-        material: sprite_handle,
-        mesh: quad.clone().into(),
+        texture: asset_server.load("my-pixel-art-sprite.png"),
+        sprite: Sprite {
+            anchor: Anchor::BottomLeft,
+            ..Default::default()
+        },
         ..Default::default()
     });
 }

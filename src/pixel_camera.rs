@@ -121,8 +121,10 @@ impl CameraProjection for PixelProjection {
             self.right,
             self.bottom,
             self.top,
-            self.near,
+            // NOTE: near and far are swapped to invert the depth range from [0,1] to [1,0]
+            // This is for interoperability with pipelines using infinite reverse perspective projections.
             self.far,
+            self.near,
         )
     }
 

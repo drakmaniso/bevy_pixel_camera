@@ -1,4 +1,3 @@
-use bevy::math::Vec3;
 use bevy::prelude::{
     Bundle, Component, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform,
 };
@@ -22,89 +21,64 @@ pub struct PixelCameraBundle {
 }
 
 impl PixelCameraBundle {
-    /// Create a component bundle for a camera where the size of virtual pixels
-    /// are specified with `zoom`.
-    pub fn from_zoom(zoom: i32) -> Self {
-        let pixel_projection = PixelProjection {
-            zoom: zoom,
-            ..Default::default()
-        };
+    /// Create a component bundle for a camera with the specified projection.
+    pub fn new(pixel_projection: PixelProjection) -> Self {
         let far = pixel_projection.far;
-        let view_projection = pixel_projection.get_projection_matrix();
-        let frustum = Frustum::from_view_projection(&view_projection, &Vec3::ZERO, &Vec3::Z, far);
+        let transform = Transform::from_xyz(0.0, 0.0, far - 0.1);
+        let view_projection =
+            pixel_projection.get_projection_matrix() * transform.compute_matrix().inverse();
+        let frustum = Frustum::from_view_projection(
+            &view_projection,
+            &transform.translation,
+            &transform.back(),
+            pixel_projection.far(),
+        );
         Self {
             camera: Camera::default(),
             pixel_projection,
             visible_entities: Default::default(),
             frustum,
-            transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
+            transform,
             global_transform: Default::default(),
             marker: Camera2d,
         }
+    }
+
+    /// Create a component bundle for a camera where the size of virtual pixels
+    /// are specified with `zoom`.
+    pub fn from_zoom(zoom: i32) -> Self {
+        Self::new(PixelProjection {
+            zoom: zoom,
+            ..Default::default()
+        })
     }
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified resolution inside the window.
     pub fn from_resolution(width: i32, height: i32) -> Self {
-        let pixel_projection = PixelProjection {
+        Self::new(PixelProjection {
             desired_width: Some(width),
             desired_height: Some(height),
             ..Default::default()
-        };
-        let far = pixel_projection.far;
-        let view_projection = pixel_projection.get_projection_matrix();
-        let frustum = Frustum::from_view_projection(&view_projection, &Vec3::ZERO, &Vec3::Z, far);
-        Self {
-            camera: Camera::default(),
-            pixel_projection,
-            visible_entities: Default::default(),
-            frustum,
-            transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
-            global_transform: Default::default(),
-            marker: Camera2d,
-        }
+        })
     }
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified width inside the window.
     pub fn from_width(width: i32) -> Self {
-        let pixel_projection = PixelProjection {
+        Self::new(PixelProjection {
             desired_width: Some(width),
             ..Default::default()
-        };
-        let far = pixel_projection.far;
-        let view_projection = pixel_projection.get_projection_matrix();
-        let frustum = Frustum::from_view_projection(&view_projection, &Vec3::ZERO, &Vec3::Z, far);
-        Self {
-            camera: Camera::default(),
-            pixel_projection,
-            visible_entities: Default::default(),
-            frustum,
-            transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
-            global_transform: Default::default(),
-            marker: Camera2d,
-        }
+        })
     }
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified height inside the window.
     pub fn from_height(height: i32) -> Self {
-        let pixel_projection = PixelProjection {
+        Self::new(PixelProjection {
             desired_height: Some(height),
             ..Default::default()
-        };
-        let far = pixel_projection.far;
-        let view_projection = pixel_projection.get_projection_matrix();
-        let frustum = Frustum::from_view_projection(&view_projection, &Vec3::ZERO, &Vec3::Z, far);
-        Self {
-            camera: Camera::default(),
-            pixel_projection,
-            visible_entities: Default::default(),
-            frustum,
-            transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
-            global_transform: Default::default(),
-            marker: Camera2d,
-        }
+        })
     }
 }
 

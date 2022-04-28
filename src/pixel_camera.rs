@@ -2,6 +2,7 @@ use bevy::prelude::{
     Bundle, Component, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform,
 };
 use bevy::render::camera::{Camera, Camera2d, CameraProjection, DepthCalculation};
+use bevy::render::primitives::Frustum;
 use bevy::render::view::VisibleEntities;
 
 /// Provides the components for the camera entity.
@@ -13,81 +14,71 @@ pub struct PixelCameraBundle {
     pub camera: Camera,
     pub pixel_projection: PixelProjection,
     pub visible_entities: VisibleEntities,
+    pub frustum: Frustum,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub marker: Camera2d,
 }
 
 impl PixelCameraBundle {
-    /// Create a component bundle for a camera where the size of virtual pixels
-    /// are specified with `zoom`.
-    pub fn from_zoom(zoom: i32) -> Self {
-        let projection = PixelProjection {
-            zoom: zoom,
-            ..Default::default()
-        };
-        let far = projection.far;
+    /// Create a component bundle for a camera with the specified projection.
+    pub fn new(pixel_projection: PixelProjection) -> Self {
+        let far = pixel_projection.far;
+        let transform = Transform::from_xyz(0.0, 0.0, far - 0.1);
+        let view_projection =
+            pixel_projection.get_projection_matrix() * transform.compute_matrix().inverse();
+        let frustum = Frustum::from_view_projection(
+            &view_projection,
+            &transform.translation,
+            &transform.back(),
+            pixel_projection.far(),
+        );
         Self {
             camera: Camera::default(),
-            pixel_projection: projection,
+            pixel_projection,
             visible_entities: Default::default(),
-            transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
+            frustum,
+            transform,
             global_transform: Default::default(),
             marker: Camera2d,
         }
+    }
+
+    /// Create a component bundle for a camera where the size of virtual pixels
+    /// are specified with `zoom`.
+    pub fn from_zoom(zoom: i32) -> Self {
+        Self::new(PixelProjection {
+            zoom: zoom,
+            ..Default::default()
+        })
     }
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified resolution inside the window.
     pub fn from_resolution(width: i32, height: i32) -> Self {
-        let far = 1000.0;
-        Self {
-            camera: Camera::default(),
-
-            pixel_projection: PixelProjection {
-                desired_width: Some(width),
-                desired_height: Some(height),
-                ..Default::default()
-            },
-            visible_entities: Default::default(),
-            transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
-            global_transform: Default::default(),
-            marker: Camera2d,
-        }
+        Self::new(PixelProjection {
+            desired_width: Some(width),
+            desired_height: Some(height),
+            ..Default::default()
+        })
     }
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified width inside the window.
     pub fn from_width(width: i32) -> Self {
-        let far = 1000.0;
-        Self {
-            camera: Camera::default(),
-            pixel_projection: PixelProjection {
-                desired_width: Some(width),
-                ..Default::default()
-            },
-            visible_entities: Default::default(),
-            transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
-            global_transform: Default::default(),
-            marker: Camera2d,
-        }
+        Self::new(PixelProjection {
+            desired_width: Some(width),
+            ..Default::default()
+        })
     }
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified height inside the window.
     pub fn from_height(height: i32) -> Self {
-        let far = 1000.0;
-        Self {
-            camera: Camera::default(),
-            pixel_projection: PixelProjection {
-                desired_height: Some(height),
-                ..Default::default()
-            },
-            visible_entities: Default::default(),
-            transform: Transform::from_xyz(0.0, 0.0, far - 0.1),
-            global_transform: Default::default(),
-            marker: Camera2d,
-        }
+        Self::new(PixelProjection {
+            desired_height: Some(height),
+            ..Default::default()
+        })
     }
 }
 
@@ -130,8 +121,10 @@ impl CameraProjection for PixelProjection {
             self.right,
             self.bottom,
             self.top,
-            self.near,
+            // NOTE: near and far are swapped to invert the depth range from [0,1] to [1,0]
+            // This is for interoperability with pipelines using infinite reverse perspective projections.
             self.far,
+            self.near,
         )
     }
 

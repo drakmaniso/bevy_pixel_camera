@@ -5,7 +5,7 @@ use bevy::render::camera::{
 use bevy::render::primitives::Aabb;
 use bevy::render::view::{ComputedVisibility, Visibility, VisibleEntities};
 
-/// Provides the camera system, and the quad resource for sprite meshes.
+/// Provides the camera system.
 pub struct PixelCameraPlugin;
 
 impl Plugin for PixelCameraPlugin {

@@ -1,7 +1,7 @@
 use bevy::prelude::{
-    Bundle, Component, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform,
+    Bundle, Camera2d, Component, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform,
 };
-use bevy::render::camera::{Camera, Camera2d, CameraProjection, DepthCalculation};
+use bevy::render::camera::{Camera, CameraProjection, CameraRenderGraph, DepthCalculation};
 use bevy::render::primitives::Frustum;
 use bevy::render::view::VisibleEntities;
 
@@ -12,12 +12,13 @@ use bevy::render::view::VisibleEntities;
 #[derive(Bundle)]
 pub struct PixelCameraBundle {
     pub camera: Camera,
+    pub camera_render_graph: CameraRenderGraph,
     pub pixel_projection: PixelProjection,
     pub visible_entities: VisibleEntities,
     pub frustum: Frustum,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
-    pub marker: Camera2d,
+    pub camera_2d: Camera2d,
 }
 
 impl PixelCameraBundle {
@@ -34,13 +35,14 @@ impl PixelCameraBundle {
             pixel_projection.far(),
         );
         Self {
-            camera: Camera::default(),
+            camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
             pixel_projection,
             visible_entities: Default::default(),
             frustum,
             transform,
             global_transform: Default::default(),
-            marker: Camera2d,
+            camera: Camera::default(),
+            camera_2d: Camera2d::default(),
         }
     }
 

@@ -1,6 +1,7 @@
+use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use bevy::time::FixedTimestep;
 use bevy::window;
-use bevy::{core::FixedTimestep, prelude::*};
 use bevy_pixel_camera::{PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin};
 
 // GAME CONSTANTS /////////////////////////////////////////////////////////////
@@ -52,6 +53,7 @@ fn main() {
             present_mode: window::PresentMode::Mailbox,
             ..Default::default()
         })
+        .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
         .add_plugins(DefaultPlugins)
         .add_plugin(PixelCameraPlugin)
         .add_plugin(PixelBorderPlugin {
@@ -63,7 +65,7 @@ fn main() {
         .add_startup_system(setup.label("setup"))
         .add_startup_system(spawn_bird.after("setup"))
         .add_startup_system(spawn_clouds.after("setup"))
-        .add_system(bevy::input::system::exit_on_esc_system)
+        .add_system(bevy::window::close_on_esc)
         .add_system(on_press)
         .add_system_set(
             SystemSet::on_update(GameState::StartScreen)

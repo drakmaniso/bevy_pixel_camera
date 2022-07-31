@@ -15,6 +15,15 @@
 //! by 2, you need to change the anchor of the sprite (which is at the center by
 //! default), or it will not be pixel aligned.
 //!
+//! Also note that Bevy uses linear sampling by default for textures, which is
+//! not what you want for pixel art. The easiest way to change this is to insert the
+//! following resource on you app:
+//! ```no_run
+//!     App::new()
+//!         .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
+//!         ...
+//! ```
+//!
 //! The crate also includes a separate plugin to put an opaque border
 //! around the desired resolution. This way, if the window size is not an exact
 //! multiple of the virtual resolution, anything out of bounds will still be
@@ -49,6 +58,7 @@
 //!
 //! fn main() {
 //!     App::new()
+//!         .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
 //!         .add_plugins(DefaultPlugins)
 //!         .add_plugin(PixelCameraPlugin)
 //!         .add_plugin(PixelBorderPlugin {

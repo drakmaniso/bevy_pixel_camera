@@ -13,18 +13,26 @@ configure it in a specific way (you can't just use
 This plugin provides a camera which can be easily configured by specifying
 either the size of the virtual pixels, or the desired resolution.
 
-It also includes a quad mesh resource to replace the default one used in
-Bevy's `SpriteBundle`. The default quad has its origin at the center of the
-image, but if the image has an odd width or height, that origin is not
-pixel-aligned. The resource included in this plugin puts the origin at the
-bottom-left corner of the image.
+Note that if either the width or the height of your sprite is not divisible
+by 2, you need to change the anchor of the sprite (which is at the center by
+default), or it will not be pixel aligned.
 
-Finally, the crate also includes a separate plugin to put an opaque border
+Also note that Bevy uses linear sampling by default for textures, which is
+not what you want for pixel art. The easiest way to change this is to insert the
+following resource on you app:
+
+```rust
+    App::new()
+        .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
+        ...
+```
+
+The crate also includes a separate plugin to put an opaque border
 around the desired resolution. This way, if the window size is not an exact
 multiple of the virtual resolution, anything out of bounds will still be
 hidden.
 
-### Comparison with other methods
+## Comparison with other methods
 
 There is several possible methods to render pixel-art based games. This
 crate simply upscale each sprite, and correctly align them on a virtual
@@ -42,7 +50,7 @@ drawbacks to both approaches:
   pixels (this would be even more effective with a dedicated upscaling
   shader).
 
-### Example code
+## Example code
 
 ```rust
 use bevy::prelude::*;
@@ -53,6 +61,7 @@ use bevy_pixel_camera::{
 
 fn main() {
     App::new()
+        .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
         .add_plugins(DefaultPlugins)
         .add_plugin(PixelCameraPlugin)
         .add_plugin(PixelBorderPlugin {
@@ -68,6 +77,7 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     commands.spawn_bundle(PixelCameraBundle::from_resolution(320, 240));
+
     commands.spawn_bundle(SpriteBundle {
         texture: asset_server.load("my-pixel-art-sprite.png"),
         sprite: Sprite {
@@ -79,15 +89,7 @@ fn setup(
 }
 ```
 
-Run examples with:
-
-    $ cargo run --example flappin
-
-and:
-
-    $ cargo run --example mire
-
-### License
+## License
 
 Licensed under either of
 

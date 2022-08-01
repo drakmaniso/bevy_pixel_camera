@@ -15,30 +15,38 @@
 //! by 2, you need to change the anchor of the sprite (which is at the center by
 //! default), or it will not be pixel aligned.
 //!
+//! Also note that Bevy uses linear sampling by default for textures, which is
+//! not what you want for pixel art. The easiest way to change this is to insert the
+//! following resource on you app:
+//! ```no_run
+//!     App::new()
+//!         .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
+//!         ...
+//! ```
+//!
 //! The crate also includes a separate plugin to put an opaque border
 //! around the desired resolution. This way, if the window size is not an exact
 //! multiple of the virtual resolution, anything out of bounds will still be
 //! hidden.
 //!
-//! ## Comparison with other methods
+//! A small example is included in the crate. Run it with:
+//!
+//!     $ cargo run --example flappin
+//!
+//! # Comparison with other methods
 //!
 //! There is several possible methods to render pixel-art based games. This
 //! crate simply upscale each sprite, and correctly align them on a virtual
 //! pixel grid. Another option would be to render the sprites to an offscrenn
 //! texture, and then upscale only this texture. There is advantages and
 //! drawbacks to both approaches:
-//! - the offscreen method is probably more efficient in most cases;
-//! - in both cases the coordinates of non-moving sprites must be manually kept
-//!   on integer coordinates;
-//! - forgetting to use rounded coordinates will result in much worse results
-//!   with the offscreen method; that's why this approach should probably be
-//!   paired with a specialized sprite system based on integer transforms;
+//! - the offscreen texture method is probably more efficient in most cases;
 //! - the method in this crate allows for smoother scrolling and movement of
 //!   sprites, if you're willing to temporarily break the alignment on virtual
 //!   pixels (this would be even more effective with a dedicated upscaling
 //!   shader).
 //!
-//! ## Example code
+//! # Example code
 //!
 //! ```no_run
 //! use bevy::prelude::*;
@@ -49,6 +57,7 @@
 //!
 //! fn main() {
 //!     App::new()
+//!         .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
 //!         .add_plugins(DefaultPlugins)
 //!         .add_plugin(PixelCameraPlugin)
 //!         .add_plugin(PixelBorderPlugin {

@@ -5,6 +5,7 @@ use bevy_pixel_camera::{PixelCameraBundle, PixelCameraPlugin};
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.000001, 0.000001, 0.000001)))
+        .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
         .add_plugins(DefaultPlugins)
         .add_plugin(PixelCameraPlugin)
         .add_startup_system(setup)

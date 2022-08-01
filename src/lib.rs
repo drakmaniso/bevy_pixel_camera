@@ -29,25 +29,20 @@
 //! multiple of the virtual resolution, anything out of bounds will still be
 //! hidden.
 //!
-//! ## Comparison with other methods
+//! # Comparison with other methods
 //!
 //! There is several possible methods to render pixel-art based games. This
 //! crate simply upscale each sprite, and correctly align them on a virtual
 //! pixel grid. Another option would be to render the sprites to an offscrenn
 //! texture, and then upscale only this texture. There is advantages and
 //! drawbacks to both approaches:
-//! - the offscreen method is probably more efficient in most cases;
-//! - in both cases the coordinates of non-moving sprites must be manually kept
-//!   on integer coordinates;
-//! - forgetting to use rounded coordinates will result in much worse results
-//!   with the offscreen method; that's why this approach should probably be
-//!   paired with a specialized sprite system based on integer transforms;
+//! - the offscreen texture method is probably more efficient in most cases;
 //! - the method in this crate allows for smoother scrolling and movement of
 //!   sprites, if you're willing to temporarily break the alignment on virtual
 //!   pixels (this would be even more effective with a dedicated upscaling
 //!   shader).
 //!
-//! ## Example code
+//! # Example code
 //!
 //! ```no_run
 //! use bevy::prelude::*;

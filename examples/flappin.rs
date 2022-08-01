@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy::time::FixedTimestep;
 use bevy::window;
 use bevy_pixel_camera::{PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin};
 
@@ -27,8 +26,6 @@ const BIRD_DX: f32 = 14.0;
 const BIRD_DY: f32 = 10.0;
 const BIRD_RADIUS: f32 = 8.0;
 
-const FRAME: f64 = 1.0 / 60.0;
-
 const FALLING_JERK: f32 = -2300.0;
 const FLAP_VELOCITY: f32 = 100.0;
 const FLAP_ACCELERATION: f32 = 90.0;
@@ -45,7 +42,6 @@ enum GameState {
 fn main() {
     App::new()
         .add_state(GameState::StartScreen)
-        .add_event::<ActionEvent>()
         .insert_resource(WindowDescriptor {
             title: "Flappin'".to_string(),
             width: 720.0,
@@ -62,6 +58,9 @@ fn main() {
         .insert_resource(Rng { mz: 0, mw: 0 })
         .insert_resource(ClearColor(Color::rgb(0.000001, 0.000001, 0.000001)))
         .insert_resource(Timer::from_seconds(0.25, false))
+        .insert_resource(Action {
+            just_pressed: false,
+        })
         .add_startup_system(setup.label("setup"))
         .add_startup_system(spawn_bird.after("setup"))
         .add_startup_system(spawn_clouds.after("setup"))
@@ -69,29 +68,23 @@ fn main() {
         .add_system(on_press)
         .add_system_set(
             SystemSet::on_update(GameState::StartScreen)
+                .with_system(press_to_start)
                 .with_system(animate_flying_bird)
-                .with_system(press_to_start),
+                .with_system(animate_pillars)
+                .with_system(animate_clouds),
         )
         .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_pillars))
         .add_system_set(
             SystemSet::on_update(GameState::Playing)
-                .with_system(animate_flappin_bird)
                 .with_system(flap)
-                .with_system(collision_detection),
+                .with_system(animate_flappin_bird)
+                .with_system(collision_detection)
+                .with_system(animate_pillars)
+                .with_system(animate_clouds),
         )
         .add_system_set(SystemSet::on_enter(GameState::GameOver).with_system(game_over))
         .add_system_set(SystemSet::on_update(GameState::GameOver).with_system(press_to_start))
         .add_system_set(SystemSet::on_exit(GameState::GameOver).with_system(despawn_pillars))
-        .add_system_set(
-            SystemSet::new()
-                .with_run_criteria(FixedTimestep::step(1.0 * FRAME))
-                .with_system(animate_pillars),
-        )
-        .add_system_set(
-            SystemSet::new()
-                .with_run_criteria(FixedTimestep::step(2.0 * FRAME))
-                .with_system(animate_clouds),
-        )
         .run();
 }
 
@@ -109,35 +102,39 @@ fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
 
 // INPUT MAPPING //////////////////////////////////////////////////////////////
 
-struct ActionEvent;
+struct Action {
+    just_pressed: bool,
+}
 
 fn on_press(
     keyboard: Res<Input<KeyCode>>,
     mouse_buttons: Res<Input<MouseButton>>,
     gamepad_buttons: Res<Input<GamepadButton>>,
     touches: Res<Touches>,
-    mut events: EventWriter<ActionEvent>,
+
+    mut action: ResMut<Action>,
 ) {
     if keyboard.get_just_pressed().next().is_some()
         || mouse_buttons.get_just_pressed().next().is_some()
         || gamepad_buttons.get_just_pressed().next().is_some()
         || touches.iter_just_pressed().next().is_some()
     {
-        events.send(ActionEvent);
+        action.just_pressed = true;
     }
 }
 
 // START SCREEN ///////////////////////////////////////////////////////////////
 
 fn press_to_start(
-    mut action_events: EventReader<ActionEvent>,
+    mut action: ResMut<Action>,
     mut state: ResMut<State<GameState>>,
     time: Res<Time>,
     mut timer: ResMut<Timer>,
     mut birds: Query<(&mut Transform, &mut BirdPhysics), With<Bird>>,
 ) {
     timer.tick(time.delta());
-    if timer.finished() && action_events.iter().next().is_some() {
+    if timer.finished() && action.just_pressed {
+        action.just_pressed = false;
         for (mut transform, mut physics) in birds.iter_mut() {
             *transform = Transform::from_xyz(BIRD_X, 0.0, 1.0);
             physics.velocity = FLAP_VELOCITY;
@@ -213,7 +210,7 @@ fn animate_flappin_bird(
 ) {
     for (mut transform, mut physics, mut sprite) in query.iter_mut() {
         let dt = time.delta().as_secs_f32();
-        let y = (transform.translation.y + physics.velocity * dt).round();
+        let y = transform.translation.y + physics.velocity * dt;
         *transform = Transform::from_xyz(BIRD_X, y, 1.0);
         physics.velocity += physics.acceleration * dt;
         physics.acceleration += FALLING_JERK * dt;
@@ -227,11 +224,9 @@ fn animate_flappin_bird(
     }
 }
 
-fn flap(
-    mut action_events: EventReader<ActionEvent>,
-    mut birds: Query<&mut BirdPhysics, With<Bird>>,
-) {
-    if action_events.iter().next().is_some() {
+fn flap(mut action: ResMut<Action>, mut birds: Query<&mut BirdPhysics, With<Bird>>) {
+    if action.just_pressed {
+        action.just_pressed = false;
         for mut physics in birds.iter_mut() {
             physics.velocity = FLAP_VELOCITY;
             physics.acceleration = FLAP_ACCELERATION;
@@ -322,6 +317,7 @@ fn spawn_pillars(
 }
 
 fn animate_pillars(
+    time: Res<Time>,
     mut rng: ResMut<Rng>,
     state: Res<State<GameState>>,
     mut query: Query<&mut Transform, With<Pillar>>,
@@ -329,8 +325,9 @@ fn animate_pillars(
     if *state.current() == GameState::GameOver {
         return;
     }
+    let dt = time.delta().as_secs_f32();
     for mut transform in query.iter_mut() {
-        *transform = transform.mul_transform(Transform::from_xyz(-1.0, 0.0, 0.0));
+        *transform = transform.mul_transform(Transform::from_xyz(-60.0 * dt, 0.0, 0.0));
         if transform.translation.x + PILLAR_SPACING < LEFT {
             let y = (rng.rand_range(0..PILLAR_RANGE as u32) as f32 - PILLAR_RANGE / 2.0).round();
             *transform = Transform::from_xyz(RIGHT, (y - PILLAR_HEIGHT / 2.0).round(), 2.0);
@@ -384,6 +381,7 @@ fn spawn_clouds(
 }
 
 fn animate_clouds(
+    time: Res<Time>,
     mut rng: ResMut<Rng>,
     state: Res<State<GameState>>,
     mut query: Query<(&mut Transform, &mut TextureAtlasSprite), With<Cloud>>,
@@ -391,8 +389,9 @@ fn animate_clouds(
     if *state.current() == GameState::GameOver {
         return;
     }
+    let dt = time.delta().as_secs_f32();
     for (mut transform, mut sprite) in query.iter_mut() {
-        *transform = transform.mul_transform(Transform::from_xyz(-1.0, 0.0, 0.0));
+        *transform = transform.mul_transform(Transform::from_xyz(-60.0 * dt, 0.0, 0.0));
         if transform.translation.x + CLOUD_WIDTH < LEFT {
             let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
             *transform = Transform::from_xyz(RIGHT, y, 0.0);

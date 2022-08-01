@@ -57,7 +57,7 @@ fn main() {
         })
         .insert_resource(Rng { mz: 0, mw: 0 })
         .insert_resource(ClearColor(Color::rgb(0.000001, 0.000001, 0.000001)))
-        .insert_resource(Timer::from_seconds(0.25, false))
+        .insert_resource(Timer::from_seconds(0.5, false))
         .insert_resource(Action {
             just_pressed: false,
         })
@@ -133,7 +133,11 @@ fn press_to_start(
     mut birds: Query<(&mut Transform, &mut BirdPhysics), With<Bird>>,
 ) {
     timer.tick(time.delta());
-    if timer.finished() && action.just_pressed {
+    if !timer.finished() {
+        action.just_pressed = false;
+        return;
+    }
+    if action.just_pressed {
         action.just_pressed = false;
         for (mut transform, mut physics) in birds.iter_mut() {
             *transform = Transform::from_xyz(BIRD_X, 0.0, 1.0);
@@ -391,7 +395,7 @@ fn animate_clouds(
     }
     let dt = time.delta().as_secs_f32();
     for (mut transform, mut sprite) in query.iter_mut() {
-        *transform = transform.mul_transform(Transform::from_xyz(-60.0 * dt, 0.0, 0.0));
+        *transform = transform.mul_transform(Transform::from_xyz(-30.0 * dt, 0.0, 0.0));
         if transform.translation.x + CLOUD_WIDTH < LEFT {
             let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
             *transform = Transform::from_xyz(RIGHT, y, 0.0);

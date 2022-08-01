@@ -29,6 +29,10 @@
 //! multiple of the virtual resolution, anything out of bounds will still be
 //! hidden.
 //!
+//! A small example is included in the crate. Run it with:
+//!
+//!     $ cargo run --example flappin
+//!
 //! # Comparison with other methods
 //!
 //! There is several possible methods to render pixel-art based games. This

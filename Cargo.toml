@@ -15,4 +15,12 @@ license = "MIT OR Apache-2.0"
 bevy = { version = "0.8", default-features = false, features = ["render"] }
 
 [dev-dependencies]
-bevy = "0.8"
+bevy = { version = "0.8", default-features = false, features = ["bevy_winit", "bevy_asset", "png", "x11"] }
+
+[[example]]
+name = "flappin"
+required-features = ["bevy/bevy_winit", "bevy/bevy_asset", "bevy/png"]
+
+[[example]]
+name = "mire"
+required-features = ["bevy/bevy_winit", "bevy/bevy_asset", "bevy/png"]

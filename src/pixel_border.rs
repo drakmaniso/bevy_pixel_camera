@@ -30,50 +30,31 @@ enum Border {
 }
 
 fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
+    let mut spawn_border = |name: &'static str, side: Border| -> Entity {
+        commands
+            .spawn()
+            .insert(Name::new(name))
+            .insert(side)
+            .insert_bundle(SpriteBundle {
+                sprite: Sprite {
+                    anchor: Anchor::BottomLeft,
+                    color: color.0,
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .id()
+    };
+
+    let left = spawn_border("Left", Border::Left);
+    let right = spawn_border("Right", Border::Right);
+    let top = spawn_border("Top", Border::Top);
+    let bottom = spawn_border("Bottom", Border::Bottom);
+
     commands
         .spawn()
-        .insert(Border::Left)
-        .insert_bundle(SpriteBundle {
-            sprite: Sprite {
-                anchor: Anchor::BottomLeft,
-                color: color.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        });
-    commands
-        .spawn()
-        .insert(Border::Right)
-        .insert_bundle(SpriteBundle {
-            sprite: Sprite {
-                anchor: Anchor::BottomLeft,
-                color: color.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        });
-    commands
-        .spawn()
-        .insert(Border::Top)
-        .insert_bundle(SpriteBundle {
-            sprite: Sprite {
-                anchor: Anchor::BottomLeft,
-                color: color.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        });
-    commands
-        .spawn()
-        .insert(Border::Bottom)
-        .insert_bundle(SpriteBundle {
-            sprite: Sprite {
-                anchor: Anchor::BottomLeft,
-                color: color.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        });
+        .insert(Name::new("Borders"))
+        .push_children(&[left, right, top, bottom]);
 }
 
 fn resize_borders(

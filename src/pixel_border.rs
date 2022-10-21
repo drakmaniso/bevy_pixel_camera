@@ -52,7 +52,7 @@ fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
     let bottom = spawn_border("Bottom", Border::Bottom);
 
     commands
-        .spawn()
+        .spawn_bundle(SpatialBundle::default())
         .insert(Name::new("Borders"))
         .push_children(&[left, right, top, bottom]);
 }

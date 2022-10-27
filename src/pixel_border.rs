@@ -18,7 +18,7 @@ impl Plugin for PixelBorderPlugin {
 
 // Resource
 #[derive(Clone, Debug)]
-struct BorderColor(Color);
+pub struct BorderColor(Color);
 
 // Component
 #[derive(Component)]
@@ -29,7 +29,7 @@ enum Border {
     Bottom,
 }
 
-fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
+pub fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
     let mut spawn_border = |name: &'static str, side: Border| -> Entity {
         commands
             .spawn()

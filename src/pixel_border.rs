@@ -16,7 +16,7 @@ impl Plugin for PixelBorderPlugin {
     }
 }
 
-// Resource
+/// Resource used to specify the color of the opaque border.
 #[derive(Clone, Debug)]
 pub struct BorderColor(Color);
 
@@ -29,6 +29,8 @@ enum Border {
     Bottom,
 }
 
+/// System to spawn the opaque border. Automatically added by the plugin as a
+/// startup system.
 pub fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
     let mut spawn_border = |name: &'static str, side: Border| -> Entity {
         commands

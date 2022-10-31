@@ -111,8 +111,8 @@ pub struct PixelProjection {
     /// manually set. The value detemines the size of the virtual pixels.
     pub zoom: i32,
 
-    // If true, (0, 0) is the pixel closest to the center of the windoe,
-    // otherwise it's at bottom left.
+    /// If true, (0, 0) is the pixel closest to the center of the window,
+    /// otherwise it's at bottom left.
     pub centered: bool,
 }
 

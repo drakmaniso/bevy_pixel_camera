@@ -88,19 +88,19 @@ fn resize_borders(
         for (mut sprite, mut transform, border) in borders.iter_mut() {
             match border {
                 Border::Left => {
-                    *transform = Transform::from_xyz(left - width, bottom - height, z);
+                    *transform = GlobalTransform::from_xyz(left - width, bottom - height, z);
                     sprite.custom_size = Some(Vec2::new(width, 3.0 * height));
                 }
                 Border::Right => {
-                    *transform = Transform::from_xyz(right, bottom - height, z);
+                    *transform = GlobalTransform::from_xyz(right, bottom - height, z);
                     sprite.custom_size = Some(Vec2::new(width, 3.0 * height));
                 }
                 Border::Top => {
-                    *transform = Transform::from_xyz(left - width, top, z);
+                    *transform = GlobalTransform::from_xyz(left - width, top, z);
                     sprite.custom_size = Some(Vec2::new(3.0 * width, height));
                 }
                 Border::Bottom => {
-                    *transform = Transform::from_xyz(left - width, bottom - height, z);
+                    *transform = GlobalTransform::from_xyz(left - width, bottom - height, z);
                     sprite.custom_size = Some(Vec2::new(3.0 * width, height));
                 }
             }

@@ -61,10 +61,10 @@ pub fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
 
 fn resize_borders(
     cameras: Query<
-        (&PixelProjection, &Transform),
-        Or<(Changed<PixelProjection>, Changed<Transform>)>,
+        (&PixelProjection, &GlobalTransform),
+        Or<(Changed<PixelProjection>, Changed<GlobalTransform>)>,
     >,
-    mut borders: Query<(&mut Sprite, &mut Transform, &Border), Without<PixelProjection>>,
+    mut borders: Query<(&mut Sprite, &mut GlobalTransform, &Border), Without<PixelProjection>>,
 ) {
     if let Some((projection, transform)) = cameras.iter().next() {
         let z = projection.far - 0.2;

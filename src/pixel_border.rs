@@ -17,7 +17,7 @@ impl Plugin for PixelBorderPlugin {
 }
 
 /// Resource used to specify the color of the opaque border.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Resource)]
 pub struct BorderColor(Color);
 
 // Component
@@ -34,17 +34,18 @@ enum Border {
 pub fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
     let mut spawn_border = |name: &'static str, side: Border| -> Entity {
         commands
-            .spawn()
-            .insert(Name::new(name))
-            .insert(side)
-            .insert_bundle(SpriteBundle {
-                sprite: Sprite {
-                    anchor: Anchor::BottomLeft,
-                    color: color.0,
+            .spawn((
+                Name::new(name),
+                side,
+                SpriteBundle {
+                    sprite: Sprite {
+                        anchor: Anchor::BottomLeft,
+                        color: color.0,
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
-                ..Default::default()
-            })
+            ))
             .id()
     };
 
@@ -54,8 +55,7 @@ pub fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
     let bottom = spawn_border("Bottom", Border::Bottom);
 
     commands
-        .spawn_bundle(SpatialBundle::default())
-        .insert(Name::new("Borders"))
+        .spawn((SpatialBundle::default(), Name::new("Borders")))
         .push_children(&[left, right, top, bottom]);
 }
 

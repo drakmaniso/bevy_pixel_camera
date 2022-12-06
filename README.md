@@ -87,6 +87,13 @@ fn setup(
 }
 ```
 
+## Bevy versions supported
+
+|bevy|bevy_pixel_camera|
+|---|---|
+|0.9|0.3|
+|0.8|0.2|
+
 ### License
 
 Licensed under either of

@@ -1,7 +1,7 @@
 use bevy::prelude::{
     Bundle, Camera2d, Component, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform,
 };
-use bevy::render::camera::{Camera, CameraProjection, CameraRenderGraph, DepthCalculation};
+use bevy::render::camera::{Camera, CameraProjection, CameraRenderGraph};
 use bevy::render::primitives::Frustum;
 use bevy::render::view::VisibleEntities;
 
@@ -163,10 +163,6 @@ impl CameraProjection for PixelProjection {
             self.bottom = 0.0;
             self.top = actual_height;
         }
-    }
-
-    fn depth_calculation(&self) -> DepthCalculation {
-        DepthCalculation::ZDifference
     }
 
     fn far(&self) -> f32 {

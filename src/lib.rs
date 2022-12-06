@@ -18,7 +18,7 @@
 //! Also note that Bevy uses linear sampling by default for textures, which is
 //! not what you want for pixel art. The easiest way to change this is to insert the
 //! following resource on you app:
-//! ```no_run
+//! ```ignore
 //!     App::new()
 //!         .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
 //!         ...
@@ -31,7 +31,9 @@
 //!
 //! A small example is included in the crate. Run it with:
 //!
-//!     $ cargo run --example flappin
+//! ```console
+//! $ cargo run --example flappin
+//! ```
 //!
 //! # Comparison with other methods
 //!
@@ -57,8 +59,7 @@
 //!
 //! fn main() {
 //!     App::new()
-//!         .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
-//!         .add_plugins(DefaultPlugins)
+//!         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
 //!         .add_plugin(PixelCameraPlugin)
 //!         .add_plugin(PixelBorderPlugin {
 //!             color: Color::rgb(0.1, 0.1, 0.1),

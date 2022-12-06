@@ -42,22 +42,27 @@ enum GameState {
 fn main() {
     App::new()
         .add_state(GameState::StartScreen)
-        .insert_resource(WindowDescriptor {
-            title: "Flappin'".to_string(),
-            width: 720.0,
-            height: 720.0,
-            present_mode: window::PresentMode::Mailbox,
-            ..Default::default()
-        })
-        .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
-        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            DefaultPlugins
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    window: WindowDescriptor {
+                        title: "Flappin'".to_string(),
+                        width: 720.0,
+                        height: 720.0,
+                        present_mode: window::PresentMode::Mailbox,
+                        ..default()
+                    },
+                    ..default()
+                }),
+        )
         .add_plugin(PixelCameraPlugin)
         .add_plugin(PixelBorderPlugin {
             color: Color::rgb(0.1, 0.1, 0.1),
         })
         .insert_resource(Rng { mz: 0, mw: 0 })
         .insert_resource(ClearColor(Color::rgb(0.000001, 0.000001, 0.000001)))
-        .insert_resource(Timer::from_seconds(0.5, false))
+        .insert_resource(FlapTimer(Timer::from_seconds(0.5, TimerMode::Once)))
         .insert_resource(Action {
             just_pressed: false,
         })
@@ -94,7 +99,7 @@ fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
         mw: 678,
     };
 
-    commands.spawn_bundle(PixelCameraBundle::from_resolution(
+    commands.spawn(PixelCameraBundle::from_resolution(
         WIDTH as i32,
         HEIGHT as i32,
     ));
@@ -102,6 +107,7 @@ fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
 
 // INPUT MAPPING //////////////////////////////////////////////////////////////
 
+#[derive(Resource)]
 struct Action {
     just_pressed: bool,
 }
@@ -129,7 +135,7 @@ fn press_to_start(
     mut action: ResMut<Action>,
     mut state: ResMut<State<GameState>>,
     time: Res<Time>,
-    mut timer: ResMut<Timer>,
+    mut timer: ResMut<FlapTimer>,
     mut birds: Query<(&mut Transform, &mut BirdPhysics), With<Bird>>,
 ) {
     timer.tick(time.delta());
@@ -176,15 +182,16 @@ fn spawn_bird(
         Vec2::new(26.0, 21.0),
         4,
         1,
+        None,
+        None,
     ));
-    commands
-        .spawn()
-        .insert(Bird)
-        .insert(BirdPhysics {
+    commands.spawn((
+        Bird,
+        BirdPhysics {
             velocity: 100.0,
             acceleration: 0.0,
-        })
-        .insert_bundle(SpriteSheetBundle {
+        },
+        SpriteSheetBundle {
             texture_atlas,
             transform: Transform::from_translation(Vec3::new(BIRD_X, 0.0, 1.0)),
             sprite: TextureAtlasSprite {
@@ -192,8 +199,9 @@ fn spawn_bird(
                 ..Default::default()
             },
             ..Default::default()
-        })
-        .insert(BirdTimer(Timer::from_seconds(0.150, true)));
+        },
+        BirdTimer(Timer::from_seconds(0.150, TimerMode::Repeating)),
+    ));
 }
 
 fn animate_flying_bird(
@@ -238,7 +246,7 @@ fn flap(mut action: ResMut<Action>, mut birds: Query<&mut BirdPhysics, With<Bird
     }
 }
 
-fn game_over(mut timer: ResMut<Timer>, mut birds: Query<&mut TextureAtlasSprite, With<Bird>>) {
+fn game_over(mut timer: ResMut<FlapTimer>, mut birds: Query<&mut TextureAtlasSprite, With<Bird>>) {
     timer.reset();
     for mut sprite in birds.iter_mut() {
         sprite.index = 3;
@@ -299,15 +307,16 @@ fn spawn_pillars(
         Vec2::new(PILLAR_WIDTH, PILLAR_HEIGHT),
         1,
         1,
+        None,
+        None,
     ));
 
     let mut x = RIGHT;
     while x < RIGHT + WIDTH + PILLAR_SPACING {
         let y = (rng.rand_range(0..PILLAR_RANGE as u32) as f32 - PILLAR_RANGE / 2.0).round();
-        commands
-            .spawn()
-            .insert(Pillar)
-            .insert_bundle(SpriteSheetBundle {
+        commands.spawn((
+            Pillar,
+            SpriteSheetBundle {
                 texture_atlas: atlas.clone(),
                 transform: Transform::from_xyz(x, (y - PILLAR_HEIGHT / 2.0).round(), 2.0),
                 sprite: TextureAtlasSprite {
@@ -315,7 +324,8 @@ fn spawn_pillars(
                     ..Default::default()
                 },
                 ..Default::default()
-            });
+            },
+        ));
         x += PILLAR_SPACING;
     }
 }
@@ -362,15 +372,16 @@ fn spawn_clouds(
         Vec2::new(CLOUD_WIDTH, CLOUD_HEIGHT),
         4,
         1,
+        None,
+        None,
     ));
 
     let mut x = LEFT;
     while x < RIGHT {
         let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
-        commands
-            .spawn()
-            .insert(Cloud)
-            .insert_bundle(SpriteSheetBundle {
+        commands.spawn((
+            Cloud,
+            SpriteSheetBundle {
                 texture_atlas: clouds_atlas.clone(),
                 transform: Transform::from_xyz(x, y, 0.0),
                 sprite: TextureAtlasSprite {
@@ -379,7 +390,8 @@ fn spawn_clouds(
                     ..Default::default()
                 },
                 ..Default::default()
-            });
+            },
+        ));
         x += CLOUD_WIDTH;
     }
 }
@@ -429,6 +441,24 @@ fn clamp(v: f32, lower: f32, upper: f32) -> f32 {
 
 // RNG ////////////////////////////////////////////////////////////////////////
 
+#[derive(Resource)]
+struct FlapTimer(Timer);
+
+impl std::ops::Deref for FlapTimer {
+    type Target = Timer;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for FlapTimer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+#[derive(Resource)]
 struct Rng {
     mz: u32,
     mw: u32,

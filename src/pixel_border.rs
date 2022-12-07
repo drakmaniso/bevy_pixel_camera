@@ -61,8 +61,8 @@ pub fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
 
 fn resize_borders(
     cameras: Query<
-        (&PixelProjection, &Transform),
-        Or<(Changed<PixelProjection>, Changed<Transform>)>,
+        (&PixelProjection, &GlobalTransform),
+        Or<(Changed<PixelProjection>, Changed<GlobalTransform>)>,
     >,
     mut borders: Query<(&mut Sprite, &mut Transform, &Border), Without<PixelProjection>>,
 ) {
@@ -70,14 +70,14 @@ fn resize_borders(
         let z = projection.far - 0.2;
         let width = projection.desired_width.map(|w| w as f32).unwrap_or(0.0);
         let height = projection.desired_height.map(|h| h as f32).unwrap_or(0.0);
-        let left = transform.translation.x
+        let left = transform.translation().x
             + if projection.centered {
                 -(width / 2.0).round()
             } else {
                 0.0
             };
         let right = left + width;
-        let bottom = transform.translation.y
+        let bottom = transform.translation().y
             + if projection.centered {
                 (-height / 2.0).round()
             } else {

@@ -1,5 +1,5 @@
-use bevy::prelude::{App, CoreStage, Plugin};
-use bevy::render::camera::{self, Camera, OrthographicProjection, ScalingMode, WindowOrigin};
+use bevy::prelude::{App, CoreSet, IntoSystemConfig, Plugin};
+use bevy::render::camera::{self, Camera, OrthographicProjection, ScalingMode};
 use bevy::render::primitives::Aabb;
 use bevy::render::view::{ComputedVisibility, Visibility, VisibleEntities};
 
@@ -13,12 +13,10 @@ impl Plugin for PixelCameraPlugin {
             .register_type::<ComputedVisibility>()
             .register_type::<OrthographicProjection>()
             .register_type::<VisibleEntities>()
-            .register_type::<WindowOrigin>()
             .register_type::<ScalingMode>()
             .register_type::<Aabb>()
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                camera::camera_system::<super::PixelProjection>,
+            .add_system(
+                camera::camera_system::<super::PixelProjection>.in_base_set(CoreSet::PostUpdate),
             );
     }
 }

@@ -1,6 +1,6 @@
-use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy::window;
+use bevy::{prelude::*, window::WindowResolution};
 use bevy_pixel_camera::{PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin};
 
 // GAME CONSTANTS /////////////////////////////////////////////////////////////
@@ -32,8 +32,9 @@ const FLAP_ACCELERATION: f32 = 90.0;
 
 // SETUP //////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(States, Default, Clone, Eq, PartialEq, Hash, Debug)]
 enum GameState {
+    #[default]
     StartScreen,
     Playing,
     GameOver,
@@ -41,18 +42,17 @@ enum GameState {
 
 fn main() {
     App::new()
-        .add_state(GameState::StartScreen)
+        .add_state::<GameState>()
         .add_plugins(
             DefaultPlugins
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
-                    window: WindowDescriptor {
+                    primary_window: Some(Window {
                         title: "Flappin'".to_string(),
-                        width: 720.0,
-                        height: 720.0,
+                        resolution: WindowResolution::default(),
                         present_mode: window::PresentMode::Mailbox,
                         ..default()
-                    },
+                    }),
                     ..default()
                 }),
         )
@@ -66,30 +66,33 @@ fn main() {
         .insert_resource(Action {
             just_pressed: false,
         })
-        .add_startup_system(setup.label("setup"))
-        .add_startup_system(spawn_bird.after("setup"))
-        .add_startup_system(spawn_clouds.after("setup"))
+        .add_startup_system(setup)
+        .add_startup_systems((spawn_bird, spawn_clouds).after(setup))
         .add_system(bevy::window::close_on_esc)
         .add_system(on_press)
-        .add_system_set(
-            SystemSet::on_update(GameState::StartScreen)
-                .with_system(press_to_start)
-                .with_system(animate_flying_bird)
-                .with_system(animate_pillars)
-                .with_system(animate_clouds),
+        .add_systems(
+            (
+                press_to_start,
+                animate_flying_bird,
+                animate_pillars,
+                animate_clouds,
+            )
+                .in_set(OnUpdate(GameState::StartScreen)),
         )
-        .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_pillars))
-        .add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_system(flap)
-                .with_system(animate_flappin_bird)
-                .with_system(collision_detection)
-                .with_system(animate_pillars)
-                .with_system(animate_clouds),
+        .add_system(spawn_pillars.in_schedule(OnEnter(GameState::Playing)))
+        .add_systems(
+            (
+                flap,
+                animate_flappin_bird,
+                collision_detection,
+                animate_pillars,
+                animate_clouds,
+            )
+                .in_set(OnUpdate(GameState::Playing)),
         )
-        .add_system_set(SystemSet::on_enter(GameState::GameOver).with_system(game_over))
-        .add_system_set(SystemSet::on_update(GameState::GameOver).with_system(press_to_start))
-        .add_system_set(SystemSet::on_exit(GameState::GameOver).with_system(despawn_pillars))
+        .add_system(game_over.in_schedule(OnEnter(GameState::GameOver)))
+        .add_system(press_to_start.in_set(OnUpdate(GameState::GameOver)))
+        .add_system(despawn_pillars.in_schedule(OnExit(GameState::GameOver)))
         .run();
 }
 
@@ -133,7 +136,7 @@ fn on_press(
 
 fn press_to_start(
     mut action: ResMut<Action>,
-    mut state: ResMut<State<GameState>>,
+    mut next_state: ResMut<NextState<GameState>>,
     time: Res<Time>,
     mut timer: ResMut<FlapTimer>,
     mut birds: Query<(&mut Transform, &mut BirdPhysics), With<Bird>>,
@@ -150,9 +153,7 @@ fn press_to_start(
             physics.velocity = FLAP_VELOCITY;
             physics.acceleration = FLAP_ACCELERATION;
         }
-        state
-            .set(GameState::Playing)
-            .expect("Problem while switching to playing state");
+        next_state.set(GameState::Playing);
     }
 }
 
@@ -254,7 +255,7 @@ fn game_over(mut timer: ResMut<FlapTimer>, mut birds: Query<&mut TextureAtlasSpr
 }
 
 fn collision_detection(
-    mut state: ResMut<State<GameState>>,
+    mut next_state: ResMut<NextState<GameState>>,
     birds: Query<&Transform, With<Bird>>,
     pillars: Query<&Transform, With<Pillar>>,
 ) {
@@ -283,9 +284,7 @@ fn collision_detection(
             )
         });
         if collides || bird_y < BOTTOM {
-            state
-                .set(GameState::GameOver)
-                .expect("Problem while switching to game over state");
+            next_state.set(GameState::GameOver);
         }
     }
 }
@@ -336,7 +335,7 @@ fn animate_pillars(
     state: Res<State<GameState>>,
     mut query: Query<&mut Transform, With<Pillar>>,
 ) {
-    if *state.current() == GameState::GameOver {
+    if state.0 == GameState::GameOver {
         return;
     }
     let dt = time.delta().as_secs_f32();
@@ -402,7 +401,7 @@ fn animate_clouds(
     state: Res<State<GameState>>,
     mut query: Query<(&mut Transform, &mut TextureAtlasSprite), With<Cloud>>,
 ) {
-    if *state.current() == GameState::GameOver {
+    if state.0 == GameState::GameOver {
         return;
     }
     let dt = time.delta().as_secs_f32();

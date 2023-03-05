@@ -12,7 +12,7 @@ impl Plugin for PixelBorderPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(BorderColor(self.color))
             .add_startup_system(spawn_borders)
-            .add_system_to_stage(CoreStage::PostUpdate, resize_borders);
+            .add_system(resize_borders.in_base_set(CoreSet::PostUpdate));
     }
 }
 

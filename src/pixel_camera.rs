@@ -28,7 +28,7 @@ impl PixelCameraBundle {
         let transform = Transform::from_xyz(0.0, 0.0, far - 0.1);
         let view_projection =
             pixel_projection.get_projection_matrix() * transform.compute_matrix().inverse();
-        let frustum = Frustum::from_view_projection(
+        let frustum = Frustum::from_view_projection_custom_far(
             &view_projection,
             &transform.translation,
             &transform.back(),

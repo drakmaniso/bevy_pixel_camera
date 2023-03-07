@@ -12,10 +12,10 @@ exclude = ["assets/**", ".vscode/**"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bevy = { version = "0.9", default-features = false, features = ["bevy_core_pipeline", "bevy_render", "bevy_sprite"] }
+bevy = { version = "0.10", default-features = false, features = ["bevy_core_pipeline", "bevy_render", "bevy_sprite"] }
 
 [dev-dependencies]
-bevy = { version = "0.9", default-features = false, features = ["bevy_winit", "bevy_asset", "png", "x11"] }
+bevy = { version = "0.10", default-features = false, features = ["bevy_winit", "bevy_asset", "png", "x11"] }
 
 [[example]]
 name = "flappin"

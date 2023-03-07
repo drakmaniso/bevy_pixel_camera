@@ -73,9 +73,9 @@
 //!     asset_server: Res<AssetServer>,
 //!     mut materials: ResMut<Assets<ColorMaterial>>,
 //! ) {
-//!     commands.spawn_bundle(PixelCameraBundle::from_resolution(320, 240));
+//!     commands.spawn(PixelCameraBundle::from_resolution(320, 240));
 //!
-//!     commands.spawn_bundle(SpriteBundle {
+//!     commands.spawn(SpriteBundle {
 //!         texture: asset_server.load("my-pixel-art-sprite.png"),
 //!         sprite: Sprite {
 //!             anchor: Anchor::BottomLeft,

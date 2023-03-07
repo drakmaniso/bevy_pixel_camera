@@ -18,11 +18,11 @@ by 2, you need to change the anchor of the sprite (which is at the center by
 default), or it will not be pixel aligned.
 
 Also note that Bevy uses linear sampling by default for textures, which is
-not what you want for pixel art. The easiest way to change this is to insert the
-following resource on you app:
+not what you want for pixel art. The easiest way to change this is to set the
+default_sampler on the ImagePlugin:
 ```rust
     App::new()
-        .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         ...
 ```
 
@@ -59,8 +59,7 @@ use bevy_pixel_camera::{
 
 fn main() {
     App::new()
-        .insert_resource(bevy::render::texture::ImageSettings::default_nearest())
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugin(PixelCameraPlugin)
         .add_plugin(PixelBorderPlugin {
             color: Color::rgb(0.1, 0.1, 0.1),
@@ -74,9 +73,9 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    commands.spawn_bundle(PixelCameraBundle::from_resolution(320, 240));
+    commands.spawn(PixelCameraBundle::from_resolution(320, 240));
 
-    commands.spawn_bundle(SpriteBundle {
+    commands.spawn(SpriteBundle {
         texture: asset_server.load("my-pixel-art-sprite.png"),
         sprite: Sprite {
             anchor: Anchor::BottomLeft,

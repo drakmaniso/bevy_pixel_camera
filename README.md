@@ -18,22 +18,24 @@ by 2, you need to change the anchor of the sprite (which is at the center by
 default), or it will not be pixel aligned.
 
 Also note that Bevy uses linear sampling by default for textures, which is
-not what you want for pixel art. The easiest way to change this is to set the
-default_sampler on the ImagePlugin:
+not what you want for pixel art. The easiest way to change this is to set
+the default_sampler on the ImagePlugin:
+
 ```rust
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         ...
 ```
 
-The crate also includes a separate plugin to put an opaque border
-around the desired resolution. This way, if the window size is not an exact
-multiple of the virtual resolution, anything out of bounds will still be
-hidden.
+The crate also includes a separate plugin to put an opaque border around the
+desired resolution. This way, if the window size is not an exact multiple of
+the virtual resolution, anything out of bounds will still be hidden.
 
 A small example is included in the crate. Run it with:
 
-    $ cargo run --example flappin
+```console
+cargo run --example flappin
+```
 
 ## Comparison with other methods
 
@@ -42,6 +44,7 @@ crate simply upscale each sprite, and correctly align them on a virtual
 pixel grid. Another option would be to render the sprites to an offscrenn
 texture, and then upscale only this texture. There is advantages and
 drawbacks to both approaches:
+
 - the offscreen texture method is probably more efficient in most cases;
 - the method in this crate allows for smoother scrolling and movement of
   sprites, if you're willing to temporarily break the alignment on virtual
@@ -71,7 +74,6 @@ fn main() {
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     commands.spawn(PixelCameraBundle::from_resolution(320, 240));
 
@@ -86,19 +88,22 @@ fn setup(
 }
 ```
 
-## Bevy versions supported
+### Bevy versions supported
 
-|bevy|bevy_pixel_camera|
-|---|---|
-|0.9|0.3|
-|0.8|0.2|
+| bevy | bevy_pixel_camera |
+|------|-------------------|
+| 0.10 | 0.4               |
+| 0.9  | 0.3               |
+| 0.8  | 0.2               |
 
 ### License
 
 Licensed under either of
 
-* Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-* MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+  <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or
+  <http://opensource.org/licenses/MIT>)
 
 at your option.
 

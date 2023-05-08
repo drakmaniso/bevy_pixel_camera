@@ -41,7 +41,7 @@ cargo run --example flappin
 
 There is several possible methods to render pixel-art based games. This
 crate simply upscale each sprite, and correctly align them on a virtual
-pixel grid. Another option would be to render the sprites to an offscrenn
+pixel grid. Another option would be to render the sprites to an offscreen
 texture, and then upscale only this texture. There is advantages and
 drawbacks to both approaches:
 

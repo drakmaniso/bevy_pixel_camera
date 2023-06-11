@@ -116,7 +116,7 @@ fn expensive_projection_test_for_zoom(zoom: i32) {
 fn projection_test_for_width_height_zoom(width: i32, height: i32, zoom: i32) {
     let mut window_projection = bevy::render::camera::OrthographicProjection::default();
     let mut virtual_projection = PixelProjection {
-        zoom: zoom,
+        zoom,
         ..Default::default()
     };
     virtual_projection.update(width as f32, height as f32);

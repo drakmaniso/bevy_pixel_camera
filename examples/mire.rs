@@ -66,7 +66,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // Add a 32x32 sprite in the top-right corner of our virtual resolution.
     commands.spawn(SpriteBundle {
-        texture: mire_32x32_handle.clone(),
+        texture: mire_32x32_handle,
         sprite: Sprite {
             anchor: Anchor::BottomLeft,
             ..Default::default()

@@ -50,7 +50,7 @@ impl PixelCameraBundle {
     /// are specified with `zoom`.
     pub fn from_zoom(zoom: i32) -> Self {
         Self::new(PixelProjection {
-            zoom: zoom,
+            zoom,
             ..Default::default()
         })
     }

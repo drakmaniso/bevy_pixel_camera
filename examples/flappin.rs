@@ -210,7 +210,7 @@ fn animate_flying_bird(
     for (mut timer, mut sprite) in query.iter_mut() {
         timer.0.tick(time.delta());
         if timer.0.finished() {
-            sprite.index = ((sprite.index as usize + 1) % 3) as usize;
+            sprite.index = (sprite.index + 1) % 3;
         }
     }
 }

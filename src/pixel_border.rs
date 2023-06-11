@@ -59,6 +59,7 @@ pub fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
         .push_children(&[left, right, top, bottom]);
 }
 
+#[allow(clippy::type_complexity)]
 fn resize_borders(
     cameras: Query<
         (&PixelProjection, &GlobalTransform),

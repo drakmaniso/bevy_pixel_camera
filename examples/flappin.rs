@@ -54,8 +54,8 @@ fn main() {
                     ..default()
                 }),
         )
-        .add_plugin(PixelCameraPlugin)
-        .add_plugin(PixelBorderPlugin {
+        .add_plugins(PixelCameraPlugin)
+        .add_plugins(PixelBorderPlugin {
             color: Color::rgb(0.1, 0.1, 0.1),
         })
         .insert_resource(Rng { mz: 0, mw: 0 })
@@ -64,21 +64,23 @@ fn main() {
         .insert_resource(Action {
             just_pressed: false,
         })
-        .add_startup_system(setup)
-        .add_startup_systems((spawn_bird, spawn_clouds).after(setup))
-        .add_system(bevy::window::close_on_esc)
-        .add_system(on_press)
+        .add_systems(Startup, setup)
+        .add_systems(Startup, (spawn_bird, spawn_clouds).after(setup))
+        .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(Update, on_press)
         .add_systems(
+            Update,
             (
                 press_to_start,
                 animate_flying_bird,
                 animate_pillars,
                 animate_clouds,
             )
-                .in_set(OnUpdate(GameState::StartScreen)),
+                .run_if(in_state(GameState::StartScreen)),
         )
-        .add_system(spawn_pillars.in_schedule(OnEnter(GameState::Playing)))
+        .add_systems(OnEnter(GameState::Playing), spawn_pillars)
         .add_systems(
+            Update,
             (
                 flap,
                 animate_flappin_bird,
@@ -86,11 +88,11 @@ fn main() {
                 animate_pillars,
                 animate_clouds,
             )
-                .in_set(OnUpdate(GameState::Playing)),
+                .run_if(in_state(GameState::Playing)),
         )
-        .add_system(game_over.in_schedule(OnEnter(GameState::GameOver)))
-        .add_system(press_to_start.in_set(OnUpdate(GameState::GameOver)))
-        .add_system(despawn_pillars.in_schedule(OnExit(GameState::GameOver)))
+        .add_systems(OnEnter(GameState::GameOver), game_over)
+        .add_systems(Update, press_to_start.run_if(in_state(GameState::GameOver)))
+        .add_systems(OnExit(GameState::GameOver), despawn_pillars)
         .run();
 }
 
@@ -330,12 +332,8 @@ fn spawn_pillars(
 fn animate_pillars(
     time: Res<Time>,
     mut rng: ResMut<Rng>,
-    state: Res<State<GameState>>,
     mut query: Query<&mut Transform, With<Pillar>>,
 ) {
-    if state.0 == GameState::GameOver {
-        return;
-    }
     let dt = time.delta().as_secs_f32();
     for mut transform in query.iter_mut() {
         *transform = transform.mul_transform(Transform::from_xyz(-60.0 * dt, 0.0, 0.0));
@@ -396,12 +394,8 @@ fn spawn_clouds(
 fn animate_clouds(
     time: Res<Time>,
     mut rng: ResMut<Rng>,
-    state: Res<State<GameState>>,
     mut query: Query<(&mut Transform, &mut TextureAtlasSprite), With<Cloud>>,
 ) {
-    if state.0 == GameState::GameOver {
-        return;
-    }
     let dt = time.delta().as_secs_f32();
     for (mut transform, mut sprite) in query.iter_mut() {
         *transform = transform.mul_transform(Transform::from_xyz(-30.0 * dt, 0.0, 0.0));

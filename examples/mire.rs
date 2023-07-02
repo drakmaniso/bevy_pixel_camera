@@ -6,8 +6,8 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.000001, 0.000001, 0.000001)))
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
-        .add_plugin(PixelCameraPlugin)
-        .add_startup_system(setup)
+        .add_plugins(PixelCameraPlugin)
+        .add_systems(Startup, setup)
         .run();
 }
 

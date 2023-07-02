@@ -11,8 +11,8 @@ pub struct PixelBorderPlugin {
 impl Plugin for PixelBorderPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(BorderColor(self.color))
-            .add_startup_system(spawn_borders)
-            .add_system(resize_borders.in_base_set(CoreSet::PostUpdate));
+            .add_systems(Startup, spawn_borders)
+            .add_systems(PostUpdate, resize_borders);
     }
 }
 

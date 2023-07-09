@@ -57,16 +57,13 @@ drawbacks to both approaches:
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_pixel_camera::{
-    PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin
+    PixelCameraBundle, PixelCameraPlugin
 };
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugin(PixelCameraPlugin)
-        .add_plugin(PixelBorderPlugin {
-            color: Color::rgb(0.1, 0.1, 0.1),
-        })
         .add_startup_system(setup)
         .run();
 }
@@ -75,7 +72,7 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    commands.spawn(PixelCameraBundle::from_resolution(320, 240));
+    commands.spawn(PixelCameraBundle::from_resolution(320, 240, true));
 
     commands.spawn(SpriteBundle {
         texture: asset_server.load("my-pixel-art-sprite.png"),
@@ -92,7 +89,8 @@ fn setup(
 
 | bevy | bevy_pixel_camera |
 |------|-------------------|
-| 0.10 | 0.4               |
+| 0.11 | 0.5               |
+| 0.10 | 0.4.1             |
 | 0.9  | 0.3               |
 | 0.8  | 0.2               |
 

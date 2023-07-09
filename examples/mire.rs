@@ -14,11 +14,9 @@ fn main() {
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Add a camera that will always fit the virtual resolution 320x180 inside
     // the window.
-    commands.spawn(PixelCameraBundle::from_resolution(320, 180));
-    // commands.spawn(OrthographicCameraBundle::new_2d());
+    commands.spawn(PixelCameraBundle::from_resolution(320, 180, false));
 
     let mire_32x32_handle = asset_server.load("mire-32x32.png");
-    // let mire_31x31_handle = asset_server.load("mire-31x31.png");
 
     // Add a 31x31 sprite in the center of the window.
     commands.spawn(SpriteBundle {

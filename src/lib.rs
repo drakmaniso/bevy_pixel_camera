@@ -19,7 +19,7 @@
 //! not what you want for pixel art. The easiest way to change this is to set
 //! the default_sampler on the ImagePlugin:
 //!
-//! ```rust
+//! ```ignore
 //!     App::new()
 //!         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
 //!         ...
@@ -55,16 +55,13 @@
 //! use bevy::prelude::*;
 //! use bevy::sprite::Anchor;
 //! use bevy_pixel_camera::{
-//!     PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin
+//!     PixelCameraBundle, PixelCameraPlugin
 //! };
 //!
 //! fn main() {
 //!     App::new()
 //!         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
 //!         .add_plugin(PixelCameraPlugin)
-//!         .add_plugin(PixelBorderPlugin {
-//!             color: Color::rgb(0.1, 0.1, 0.1),
-//!         })
 //!         .add_startup_system(setup)
 //!         .run();
 //! }
@@ -73,7 +70,7 @@
 //!     mut commands: Commands,
 //!     asset_server: Res<AssetServer>,
 //! ) {
-//!     commands.spawn(PixelCameraBundle::from_resolution(320, 240));
+//!     commands.spawn(PixelCameraBundle::from_resolution(320, 240, true));
 //!
 //!     commands.spawn(SpriteBundle {
 //!         texture: asset_server.load("my-pixel-art-sprite.png"),
@@ -90,7 +87,8 @@
 //!
 //! | bevy | bevy_pixel_camera |
 //! |------|-------------------|
-//! | 0.10 | 0.4               |
+//! | 0.11 | 0.5               |
+//! | 0.10 | 0.4.1             |
 //! | 0.9  | 0.3               |
 //! | 0.8  | 0.2               |
 //!
@@ -111,6 +109,7 @@ mod pixel_plugin;
 #[cfg(test)]
 mod tests;
 
+#[allow(deprecated)]
 pub use pixel_border::*;
 pub use pixel_camera::*;
 pub use pixel_plugin::*;

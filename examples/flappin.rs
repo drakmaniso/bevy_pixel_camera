@@ -1,6 +1,7 @@
+use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy::{prelude::*, window::WindowResolution};
-use bevy_pixel_camera::{PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin};
+use bevy::window::WindowResolution;
+use bevy_pixel_camera::{PixelCameraBundle, PixelCameraPlugin};
 
 // GAME CONSTANTS /////////////////////////////////////////////////////////////
 
@@ -55,9 +56,6 @@ fn main() {
                 }),
         )
         .add_plugins(PixelCameraPlugin)
-        .add_plugins(PixelBorderPlugin {
-            color: Color::rgb(0.1, 0.1, 0.1),
-        })
         .insert_resource(Rng { mz: 0, mw: 0 })
         .insert_resource(ClearColor(Color::rgb(0.000001, 0.000001, 0.000001)))
         .insert_resource(FlapTimer(Timer::from_seconds(0.5, TimerMode::Once)))
@@ -105,6 +103,7 @@ fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
     commands.spawn(PixelCameraBundle::from_resolution(
         WIDTH as i32,
         HEIGHT as i32,
+        true,
     ));
 }
 

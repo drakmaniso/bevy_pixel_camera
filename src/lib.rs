@@ -25,9 +25,9 @@
 //!         ...
 //! ```
 //!
-//! The crate also includes a separate plugin to put an opaque border around the
-//! desired resolution. This way, if the window size is not an exact multiple of
-//! the virtual resolution, anything out of bounds will still be hidden.
+//! You can also ask the plugin to automatically set and resize the viewport of
+//! the camera. This way, if the window size is not an exact multiple of the
+//! virtual resolution, anything out of bounds will be hidden.
 //!
 //! A small example is included in the crate. Run it with:
 //!
@@ -37,17 +37,25 @@
 //!
 //! # Comparison with other methods
 //!
-//! There is several possible methods to render pixel-art based games. This
-//! crate simply upscale each sprite, and correctly align them on a virtual
-//! pixel grid. Another option would be to render the sprites to an offscreen
-//! texture, and then upscale only this texture. There is advantages and
-//! drawbacks to both approaches:
+//! There is two main methods to render pixel-art games: upscale each sprite
+//! independently, or render everything to an offscreen texture and only upscale
+//! this texture. This crate use the first method. There is advantages and
+//! drawbacks to both approaches.
 //!
-//! - the offscreen texture method is probably more efficient in most cases;
-//! - the method in this crate allows for smoother scrolling and movement of
-//!   sprites, if you're willing to temporarily break the alignment on virtual
-//!   pixels (this would be even more effective with a dedicated upscaling
-//!   shader).
+//! Advantages of the "upscale each sprite independently" method:
+//!
+//! - allows for smoother scrolling and movement of sprites, if you're willing
+//!   to temporarily break the alignment on virtual pixels (this would be even
+//!   more effective with a dedicated upscaling shader);
+//! - easier to mix pixel-art and high resolution graphics (for example for
+//!   text, particles or effects).
+//!
+//! Advantages of the "offscreen texture" method:
+//!
+//! - always ensure perfect alignment on virtual pixels (authentic "retro"
+//!   look);
+//! - probably more efficient (in most cases, the difference is probably
+//!   negligible on modern computers).
 //!
 //! # Example code
 //!
@@ -83,7 +91,7 @@
 //! }
 //! ```
 //!
-//! ## Bevy versions supported
+//! # Bevy versions supported
 //!
 //! | bevy | bevy_pixel_camera |
 //! |------|-------------------|
@@ -92,7 +100,7 @@
 //! | 0.9  | 0.3               |
 //! | 0.8  | 0.2               |
 //!
-//! ## License
+//! # License
 //!
 //! Licensed under either of
 //!

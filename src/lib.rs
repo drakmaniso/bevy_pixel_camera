@@ -100,6 +100,12 @@
 //! | 0.9  | 0.3               |
 //! | 0.8  | 0.2               |
 //!
+//! ## Migration guide: 0.4 to 0.5 (Bevy 0.10 to 0.11)
+//!
+//! The `PixelBorderPlugin` has been deprecated. If you want a border around
+//! your virtual resolution, pass `true` to the `set_viewport` argument when
+//! creating the camera bundle (see example above).
+//!
 //! # License
 //!
 //! Licensed under either of

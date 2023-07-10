@@ -57,28 +57,43 @@ impl PixelCameraBundle {
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified resolution inside the window.
-    pub fn from_resolution(width: i32, height: i32) -> Self {
+    ///
+    /// If `set_viewport` is true, pixels outside of the desired resolution will
+    /// not be displayed. This will automatically set the viewport of the
+    /// camera, and resize it when necessary.
+    pub fn from_resolution(width: i32, height: i32, set_viewport: bool) -> Self {
         Self::new(PixelProjection {
             desired_width: Some(width),
             desired_height: Some(height),
+            set_viewport,
             ..Default::default()
         })
     }
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified width inside the window.
-    pub fn from_width(width: i32) -> Self {
+    ///
+    /// If `set_viewport` is true, pixels outside of the desired width will
+    /// not be displayed. This will automatically set the viewport of the
+    /// camera, and resize it when necessary.
+    pub fn from_width(width: i32, set_viewport: bool) -> Self {
         Self::new(PixelProjection {
             desired_width: Some(width),
+            set_viewport,
             ..Default::default()
         })
     }
 
     /// Create a component bundle for a camera where the size of virtual pixels
     /// is automatically set to fit the specified height inside the window.
-    pub fn from_height(height: i32) -> Self {
+    ///
+    /// If `set_viewport` is true, pixels outside of the desired height will
+    /// not be displayed. This will automatically set the viewport of the
+    /// camera, and resize it when necessary.
+    pub fn from_height(height: i32, set_viewport: bool) -> Self {
         Self::new(PixelProjection {
             desired_height: Some(height),
+            set_viewport,
             ..Default::default()
         })
     }
@@ -114,6 +129,11 @@ pub struct PixelProjection {
     /// If true, (0, 0) is the pixel closest to the center of the window,
     /// otherwise it's at bottom left.
     pub centered: bool,
+
+    /// If true, pixels outside of the desired resolution will not be displayed.
+    /// This will automatically set the viewport of the camera, and resize it
+    /// when necessary.
+    pub set_viewport: bool,
 }
 
 impl CameraProjection for PixelProjection {
@@ -131,24 +151,7 @@ impl CameraProjection for PixelProjection {
     }
 
     fn update(&mut self, width: f32, height: f32) {
-        let mut zoom_x = None;
-        if let Some(desired_width) = self.desired_width {
-            if desired_width > 0 {
-                zoom_x = Some((width as i32) / desired_width);
-            }
-        }
-        let mut zoom_y = None;
-        if let Some(desired_height) = self.desired_height {
-            if desired_height > 0 {
-                zoom_y = Some((height as i32) / desired_height);
-            }
-        }
-        match (zoom_x, zoom_y) {
-            (Some(zoom_x), Some(zoom_y)) => self.zoom = zoom_x.min(zoom_y).max(1),
-            (Some(zoom_x), None) => self.zoom = zoom_x.max(1),
-            (None, Some(zoom_y)) => self.zoom = zoom_y.max(1),
-            (None, None) => (),
-        }
+        self.zoom = self.desired_zoom(width, height);
 
         let actual_width = width / (self.zoom as f32);
         let actual_height = height / (self.zoom as f32);
@@ -170,6 +173,29 @@ impl CameraProjection for PixelProjection {
     }
 }
 
+impl PixelProjection {
+    pub fn desired_zoom(&self, width: f32, height: f32) -> i32 {
+        let mut zoom_x = None;
+        if let Some(desired_width) = self.desired_width {
+            if desired_width > 0 {
+                zoom_x = Some((width as i32) / desired_width);
+            }
+        }
+        let mut zoom_y = None;
+        if let Some(desired_height) = self.desired_height {
+            if desired_height > 0 {
+                zoom_y = Some((height as i32) / desired_height);
+            }
+        }
+        match (zoom_x, zoom_y) {
+            (Some(zoom_x), Some(zoom_y)) => zoom_x.min(zoom_y).max(1),
+            (Some(zoom_x), None) => zoom_x.max(1),
+            (None, Some(zoom_y)) => zoom_y.max(1),
+            (None, None) => self.zoom,
+        }
+    }
+}
+
 impl Default for PixelProjection {
     fn default() -> Self {
         Self {
@@ -183,6 +209,7 @@ impl Default for PixelProjection {
             desired_height: None,
             zoom: 1,
             centered: true,
+            set_viewport: false,
         }
     }
 }

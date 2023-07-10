@@ -1,3 +1,6 @@
+#![deprecated(since = "0.5.0", note = "please use the `set_viewport` flag instead")]
+#![allow(deprecated)]
+
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 
@@ -11,8 +14,13 @@ pub struct PixelBorderPlugin {
 impl Plugin for PixelBorderPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(BorderColor(self.color))
-            .add_startup_system(spawn_borders)
-            .add_system(resize_borders.in_base_set(CoreSet::PostUpdate));
+            .add_systems(Startup, spawn_borders)
+            .add_systems(
+                PostUpdate,
+                resize_borders
+                    .after(bevy::render::camera::camera_system::<PixelProjection>)
+                    .before(bevy::render::view::visibility::update_frusta::<PixelProjection>),
+            );
     }
 }
 
@@ -67,7 +75,7 @@ fn resize_borders(
     >,
     mut borders: Query<(&mut Sprite, &mut Transform, &Border), Without<PixelProjection>>,
 ) {
-    if let Some((projection, transform)) = cameras.iter().next() {
+    for (projection, transform) in cameras.iter() {
         let z = projection.far - 0.2;
         let width = projection.desired_width.map(|w| w as f32).unwrap_or(0.0);
         let height = projection.desired_height.map(|h| h as f32).unwrap_or(0.0);

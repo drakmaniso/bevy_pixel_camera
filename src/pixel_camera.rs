@@ -24,8 +24,7 @@ pub struct PixelCameraBundle {
 impl PixelCameraBundle {
     /// Create a component bundle for a camera with the specified projection.
     pub fn new(pixel_projection: PixelProjection) -> Self {
-        let far = pixel_projection.far;
-        let transform = Transform::from_xyz(0.0, 0.0, far - 0.1);
+        let transform = Transform::from_xyz(0.0, 0.0, 0.0);
         let view_projection =
             pixel_projection.get_projection_matrix() * transform.compute_matrix().inverse();
         let frustum = Frustum::from_view_projection_custom_far(
@@ -203,7 +202,7 @@ impl Default for PixelProjection {
             right: 1.0,
             bottom: -1.0,
             top: 1.0,
-            near: 0.0,
+            near: -1000.0,
             far: 1000.0,
             desired_width: None,
             desired_height: None,

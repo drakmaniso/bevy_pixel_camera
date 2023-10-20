@@ -78,7 +78,14 @@
 //!     mut commands: Commands,
 //!     asset_server: Res<AssetServer>,
 //! ) {
-//!     commands.spawn(PixelCameraBundle::from_resolution(320, 240, true));
+//!     commands.spawn((
+//!         Camera2dBundle::default(),
+//!         PixelZoom::Auto {
+//!             width: 320,
+//!             height: 180,
+//!         },
+//!         PixelViewport,
+//!     ));
 //!
 //!     commands.spawn(SpriteBundle {
 //!         texture: asset_server.load("my-pixel-art-sprite.png"),
@@ -120,10 +127,11 @@
 mod pixel_border;
 mod pixel_camera;
 mod pixel_plugin;
-#[cfg(test)]
-mod tests;
+mod pixel_zoom;
 
 #[allow(deprecated)]
 pub use pixel_border::*;
+#[allow(deprecated)]
 pub use pixel_camera::*;
 pub use pixel_plugin::*;
+pub use pixel_zoom::*;

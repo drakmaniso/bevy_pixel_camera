@@ -1,9 +1,14 @@
+#![deprecated(since = "0.5.1", note = "please use the `PixelZoom` component instead")]
+#![allow(deprecated)]
+
 use bevy::prelude::{
-    Bundle, Camera2d, Component, GlobalTransform, Mat4, Reflect, ReflectComponent, Transform,
+    Bundle, Camera2d, Component, EventReader, GlobalTransform, Mat4, Query, Reflect,
+    ReflectComponent, Transform, UVec2, With,
 };
-use bevy::render::camera::{Camera, CameraProjection, CameraRenderGraph};
+use bevy::render::camera::{Camera, CameraProjection, CameraRenderGraph, Viewport};
 use bevy::render::primitives::Frustum;
 use bevy::render::view::VisibleEntities;
+use bevy::window::{Window, WindowResized};
 
 /// Provides the components for the camera entity.
 ///
@@ -209,6 +214,58 @@ impl Default for PixelProjection {
             zoom: 1,
             centered: true,
             set_viewport: false,
+        }
+    }
+}
+
+#[allow(clippy::type_complexity)]
+pub(crate) fn update_pixel_camera_viewport(
+    mut resize_events: EventReader<WindowResized>,
+    windows: Query<&Window>,
+    mut cameras: Query<(&mut Camera, &PixelProjection), With<PixelProjection>>,
+) {
+    for event in resize_events.iter() {
+        let window = windows.get(event.window).unwrap(); // TODO: better than unwrap?
+        for (mut camera, projection) in cameras.iter_mut() {
+            //TODO
+            if projection.set_viewport {
+                let zoom = projection.desired_zoom(event.width, event.height);
+                let scale_factor = window.resolution.scale_factor();
+                let viewport_width;
+                let viewport_height;
+                let viewport_x;
+                let viewport_y;
+
+                if let Some(target_width) = projection.desired_width {
+                    let logical_target_width = (target_width * zoom) as f64;
+                    viewport_width = (scale_factor * logical_target_width) as u32;
+                    viewport_x =
+                        (scale_factor * ((event.width as f64) - logical_target_width)) as u32 / 2;
+                } else {
+                    viewport_width = window.physical_width();
+                    viewport_x = 0;
+                }
+                if let Some(target_height) = projection.desired_height {
+                    let logicat_target_height = (target_height * zoom) as f64;
+                    viewport_height = (scale_factor * logicat_target_height) as u32;
+                    viewport_y =
+                        (scale_factor * ((event.height as f64) - logicat_target_height)) as u32 / 2;
+                } else {
+                    viewport_height = window.physical_height();
+                    viewport_y = 0;
+                }
+                camera.viewport = Some(Viewport {
+                    physical_position: UVec2 {
+                        x: viewport_x,
+                        y: viewport_y,
+                    },
+                    physical_size: UVec2 {
+                        x: viewport_width,
+                        y: viewport_height,
+                    },
+                    ..Default::default()
+                });
+            }
         }
     }
 }

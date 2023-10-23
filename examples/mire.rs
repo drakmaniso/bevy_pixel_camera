@@ -19,7 +19,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // inside the window.
     commands.spawn((
         Camera2dBundle::default(),
-        PixelZoom::Auto {
+        PixelZoom::FitSize {
             width: WIDTH,
             height: HEIGHT,
         },

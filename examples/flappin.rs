@@ -103,7 +103,7 @@ fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
 
     commands.spawn((
         Camera2dBundle::default(),
-        PixelZoom::Auto {
+        PixelZoom::FitSize {
             width: WIDTH as i32,
             height: HEIGHT as i32,
         },

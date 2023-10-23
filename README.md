@@ -1,25 +1,22 @@
 # bevy_pixel_camera
 
-A simple pixel-perfect camera plugin for Bevy, suitable for pixel-art.
+A simple camera plugin for the Bevy game engine, to help displaying
+pixel-art sprites.
 
-This crates makes it possible to correctly display low-resolution 2d
-graphics with Bevy's default renderer and sprites.
+This crates provides a plugin to automatically configure Bevy's
+`Camera2dBundle`. It sets the camera to an integer scaling factor (using
+Bevy's `ScalingMode::WindowSize`), and automatically updates the zoom level
+so that the specified target resolution fills as much of the sceen as
+possible.
 
-While it is possible to achieve pixel-perfect rendering with Bevy's own
-camera and `OrthographicProjection`, doing so correctly requires to
-configure it in a specific way (you can't just use
-`OrhtographicCameraBundle`).
+The plugin can also automatically set and resize the viewport of the camera
+to match the target resolution.
 
-This plugin provides a camera which can be easily configured by specifying
-either the size of the virtual pixels, or the desired resolution.
+## How to use
 
-Note that if either the width or the height of your sprite is not divisible
-by 2, you need to change the anchor of the sprite (which is at the center by
-default), or it will not be pixel aligned.
-
-Also note that Bevy uses linear sampling by default for textures, which is
-not what you want for pixel art. The easiest way to change this is to set
-the default_sampler on the ImagePlugin:
+Note that Bevy uses linear sampling by default for textures, which is not
+what you want for pixel art. The easiest way to change this is to configure
+Bevy's `ImagePlugin`:
 
 ```rust
     App::new()
@@ -27,9 +24,9 @@ the default_sampler on the ImagePlugin:
         ...
 ```
 
-You can also ask the plugin to automatically set and resize the viewport of
-the camera. This way, if the window size is not an exact multiple of the
-virtual resolution, anything out of bounds will be hidden.
+Also note that if either the width or the height of your sprite is not
+divisible by 2, you may need to change the anchor of the sprite (which is at
+the center by default), if you want it to be aligned with virtual pixels.
 
 A small example is included in the crate. Run it with:
 
@@ -65,14 +62,14 @@ Advantages of the "offscreen texture" method:
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_pixel_camera::{
-    PixelCameraBundle, PixelCameraPlugin
+    PixelCameraPlugin, PixelZoom, PixelViewport
 };
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
-        .add_plugin(PixelCameraPlugin)
-        .add_startup_system(setup)
+        .add_plugins(PixelCameraPlugin)
+        .add_systems(Startup, setup)
         .run();
 }
 
@@ -80,7 +77,14 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    commands.spawn(PixelCameraBundle::from_resolution(320, 240, true));
+    commands.spawn((
+        Camera2dBundle::default(),
+        PixelZoom::FitSize {
+            width: 320,
+            height: 180,
+        },
+        PixelViewport,
+    ));
 
     commands.spawn(SpriteBundle {
         texture: asset_server.load("my-pixel-art-sprite.png"),
@@ -97,7 +101,7 @@ fn setup(
 
 | bevy | bevy_pixel_camera |
 |------|-------------------|
-| 0.11 | 0.5               |
+| 0.11 | 0.5.2             |
 | 0.10 | 0.4.1             |
 | 0.9  | 0.3               |
 | 0.8  | 0.2               |
@@ -107,6 +111,12 @@ fn setup(
 The `PixelBorderPlugin` has been deprecated. If you want a border around
 your virtual resolution, pass `true` to the `set_viewport` argument when
 creating the camera bundle (see example above).
+
+### Migration guide: 0.5 to 0.5.2
+
+The `PixelCameraBundle` has been deprecated. Replace it with a standard
+`Camera2dBundle`, to which you add the `PixelZoom` and `PixelViewport`
+components.
 
 ## License
 

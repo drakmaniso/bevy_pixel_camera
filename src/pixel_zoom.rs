@@ -6,14 +6,30 @@ use bevy::{
 };
 
 #[derive(Component, Debug, Clone, PartialEq)]
+/// Configure a `Camera2dBundle` to use integer scaling and automatically match
+/// a specified resolution.
+///
+/// Note: when this component is present, a plugin system will automatically
+/// update the `ScalingMode` of the camera bundle.
 pub enum PixelZoom {
-    Auto { width: i32, height: i32 },
-    AutoWidth { width: i32 },
-    AutoHeight { height: i32 },
-    Fixed { zoom: i32 },
+    /// Manually specify the camera zoom, i.e. the number of screen pixels
+    /// (logical pixels) used to display one virtual pixel (world unit).
+    Fixed(i32),
+    /// Automatically set the camera zoom to fit the specified resolution inside
+    /// the window.
+    FitSize { width: i32, height: i32 },
+    /// Automatically set the camera zoom to fit the specified width inside the
+    /// window.
+    FitWidth(i32),
+    /// Automatically set the camera zoom to fit the specified height inside the
+    /// window.
+    FitHeight(i32),
 }
 
 #[derive(Component, Debug, Clone, PartialEq)]
+/// Configure a `Camera2dBundle` to automatically set the viewport so that only
+/// pixels inside the desired resolution (as defined by the `PixelZoom`
+/// component) are displayed.
 pub struct PixelViewport;
 
 pub(crate) fn pixel_zoom_system(
@@ -101,21 +117,21 @@ fn is_changed(
 
 fn auto_zoom(mode: &PixelZoom, logical_size: Vec2) -> i32 {
     match mode {
-        PixelZoom::Auto { width, height } => {
+        PixelZoom::FitSize { width, height } => {
             let zoom_x = (logical_size.x as i32) / i32::max(*width, 1);
             let zoom_y = (logical_size.y as i32) / i32::max(*height, 1);
             let zoom = i32::min(zoom_x, zoom_y);
             i32::max(zoom, 1)
         }
-        PixelZoom::AutoWidth { width } => {
+        PixelZoom::FitWidth(width) => {
             let zoom = (logical_size.x as i32) / i32::max(*width, 1);
             i32::max(zoom, 1)
         }
-        PixelZoom::AutoHeight { height } => {
+        PixelZoom::FitHeight(height) => {
             let zoom = (logical_size.y as i32) / i32::max(*height, 1);
             i32::max(zoom, 1)
         }
-        PixelZoom::Fixed { zoom } => *zoom,
+        PixelZoom::Fixed(zoom) => *zoom,
     }
 }
 
@@ -127,10 +143,10 @@ fn set_viewport(
     logical_size: Vec2,
 ) {
     let (auto_width, auto_height) = match mode {
-        PixelZoom::Auto { width, height } => (Some(*width), Some(*height)),
-        PixelZoom::AutoWidth { width } => (Some(*width), None),
-        PixelZoom::AutoHeight { height } => (None, Some(*height)),
-        PixelZoom::Fixed { .. } => (None, None),
+        PixelZoom::FitSize { width, height } => (Some(*width), Some(*height)),
+        PixelZoom::FitWidth(width) => (Some(*width), None),
+        PixelZoom::FitHeight(height) => (None, Some(*height)),
+        PixelZoom::Fixed(..) => (None, None),
     };
 
     let scale_factor = (physical_size.x as f32) / logical_size.x;

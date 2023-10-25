@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy::window::WindowResolution;
-use bevy_pixel_camera::{PixelCameraBundle, PixelCameraPlugin};
+use bevy_pixel_camera::{PixelCameraPlugin, PixelViewport, PixelZoom};
 
 // GAME CONSTANTS /////////////////////////////////////////////////////////////
 
@@ -12,19 +11,19 @@ const RIGHT: f32 = LEFT + WIDTH;
 const BOTTOM: f32 = -HEIGHT / 2.0;
 const _TOP: f32 = BOTTOM + HEIGHT;
 
-const CLOUD_WIDTH: f32 = 64.0;
-const CLOUD_HEIGHT: f32 = 18.0;
+const CLOUD_WIDTH: f32 = 66.0;
+const CLOUD_HEIGHT: f32 = 20.0;
 
-const PILLAR_WIDTH: f32 = 19.0;
-const PILLAR_HEIGHT: f32 = 480.0;
+const PILLAR_WIDTH: f32 = 21.0;
+const PILLAR_HEIGHT: f32 = 482.0;
 const PILLAR_SPACING: f32 = 80.0;
 const PILLAR_GAP: f32 = 70.0;
 const PILLAR_RANGE: f32 = 105.0;
 
 const BIRD_X: f32 = -80.0;
-const BIRD_DX: f32 = 14.0;
-const BIRD_DY: f32 = 10.0;
-const BIRD_RADIUS: f32 = 8.0;
+const BIRD_DX: f32 = 15.0;
+const BIRD_DY: f32 = 11.0;
+const BIRD_RADIUS: f32 = 6.0;
 
 const FALLING_JERK: f32 = -2300.0;
 const FLAP_VELOCITY: f32 = 100.0;
@@ -49,7 +48,8 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Flappin'".to_string(),
-                        resolution: WindowResolution::default(),
+                        // resolution: bevy::window::WindowResolution::default()
+                        //     .with_scale_factor_override(1.0),
                         ..default()
                     }),
                     ..default()
@@ -57,7 +57,7 @@ fn main() {
         )
         .add_plugins(PixelCameraPlugin)
         .insert_resource(Rng { mz: 0, mw: 0 })
-        .insert_resource(ClearColor(Color::rgb(0.000001, 0.000001, 0.000001)))
+        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
         .insert_resource(FlapTimer(Timer::from_seconds(0.5, TimerMode::Once)))
         .insert_resource(Action {
             just_pressed: false,
@@ -86,6 +86,7 @@ fn main() {
                 animate_pillars,
                 animate_clouds,
             )
+                .chain()
                 .run_if(in_state(GameState::Playing)),
         )
         .add_systems(OnEnter(GameState::GameOver), game_over)
@@ -100,11 +101,20 @@ fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
         mw: 678,
     };
 
-    commands.spawn(PixelCameraBundle::from_resolution(
-        WIDTH as i32,
-        HEIGHT as i32,
-        true,
+    commands.spawn((
+        Camera2dBundle::default(),
+        PixelZoom::FitSize {
+            width: WIDTH as i32,
+            height: HEIGHT as i32,
+        },
+        PixelViewport,
     ));
+    // Deprecated:
+    // commands.spawn(bevy_pixel_camera::PixelCameraBundle::from_resolution(
+    //     WIDTH as i32,
+    //     HEIGHT as i32,
+    //     true,
+    // ));
 }
 
 // INPUT MAPPING //////////////////////////////////////////////////////////////
@@ -179,7 +189,7 @@ fn spawn_bird(
 ) {
     let texture_atlas = texture_atlases.add(TextureAtlas::from_grid(
         asset_server.load("flappin-bird.png"),
-        Vec2::new(26.0, 21.0),
+        Vec2::new(28.0, 23.0),
         4,
         1,
         None,

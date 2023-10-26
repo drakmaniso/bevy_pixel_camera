@@ -25,8 +25,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         PixelViewport,
     ));
-    // Deprecated:
-    // commands.spawn(PixelCameraBundle::from_resolution(WIDTH, HEIGHT, false));
 
     let mire_handle = asset_server.load("mire-64x64.png");
 

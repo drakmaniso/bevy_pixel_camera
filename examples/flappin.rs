@@ -97,7 +97,7 @@ fn main() {
 
 fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
     *rng = Rng {
-        mz: time.startup().elapsed().as_secs() as u32,
+        mz: time.elapsed().as_secs() as u32,
         mw: 678,
     };
 

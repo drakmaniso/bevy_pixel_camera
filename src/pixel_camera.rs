@@ -1,6 +1,7 @@
 #![deprecated(since = "0.5.1", note = "please use the `PixelZoom` component instead")]
 #![allow(deprecated)]
 
+use bevy::math::Vec3A;
 use bevy::prelude::{
     Bundle, Camera2d, Component, EventReader, GlobalTransform, Mat4, Query, Reflect,
     ReflectComponent, Transform, UVec2, With,
@@ -174,6 +175,20 @@ impl CameraProjection for PixelProjection {
 
     fn far(&self) -> f32 {
         self.far
+    }
+
+    fn get_frustum_corners(&self, z_near: f32, z_far: f32) -> [Vec3A; 8] {
+        // NOTE: These vertices are in the specific order required by [`calculate_cascade`].
+        [
+            Vec3A::new(self.right, self.bottom, z_near), // bottom right
+            Vec3A::new(self.right, self.top, z_near),    // top right
+            Vec3A::new(self.left, self.top, z_near),     // top left
+            Vec3A::new(self.left, self.bottom, z_near),  // bottom left
+            Vec3A::new(self.right, self.bottom, z_far),  // bottom right
+            Vec3A::new(self.right, self.top, z_far),     // top right
+            Vec3A::new(self.left, self.top, z_far),      // top left
+            Vec3A::new(self.left, self.bottom, z_far),   // bottom left
+        ]
     }
 }
 

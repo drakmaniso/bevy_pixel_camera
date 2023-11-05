@@ -49,14 +49,14 @@ pub(crate) fn pixel_zoom_system(
     let primary_window = primary_window.iter().next();
 
     let mut changed_window_ids = HashSet::new();
-    changed_window_ids.extend(window_created_events.iter().map(|event| event.window));
-    changed_window_ids.extend(window_resized_events.iter().map(|event| event.window));
+    changed_window_ids.extend(window_created_events.read().map(|event| event.window));
+    changed_window_ids.extend(window_resized_events.read().map(|event| event.window));
 
-    let changed_image_handles: HashSet<&Handle<Image>> = image_asset_events
-        .iter()
+    let changed_image_handles: HashSet<&AssetId<Image>> = image_asset_events
+        .read()
         .filter_map(|event| {
-            if let AssetEvent::Modified { handle } = event {
-                Some(handle)
+            if let AssetEvent::Modified { id } = event {
+                Some(id)
             } else {
                 None
             }
@@ -102,14 +102,14 @@ pub(crate) fn pixel_zoom_system(
 fn is_changed(
     render_target: &NormalizedRenderTarget,
     changed_window_ids: &HashSet<Entity>,
-    changed_image_handles: &HashSet<&Handle<Image>>,
+    changed_image_handles: &HashSet<&AssetId<Image>>,
 ) -> bool {
     match render_target {
         NormalizedRenderTarget::Window(window_ref) => {
             changed_window_ids.contains(&window_ref.entity())
         }
         NormalizedRenderTarget::Image(image_handle) => {
-            changed_image_handles.contains(&image_handle)
+            changed_image_handles.contains(&image_handle.id())
         }
         NormalizedRenderTarget::TextureView(_) => true,
     }

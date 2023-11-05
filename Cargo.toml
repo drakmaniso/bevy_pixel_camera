@@ -1,6 +1,6 @@
 [package]
 name = "bevy_pixel_camera"
-version = "0.5.2"
+version = "0.12.0"
 authors = ["drakmaniso <moussault.laurent@gmail.com>"]
 edition = "2021"
 description = "A simple pixel-perfect camera plugin for Bevy, suitable for pixel-art"
@@ -12,17 +12,18 @@ exclude = ["assets/**", ".vscode/**"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bevy = { version = "0.11", default-features = false, features = [
+bevy = { version = "0.12", default-features = false, features = [
     "bevy_core_pipeline",
     "bevy_render",
     "bevy_sprite",
 ] }
 
 [dev-dependencies]
-bevy = { version = "0.11", default-features = false, features = [
+bevy = { version = "0.12", default-features = false, features = [
     "bevy_winit",
     "bevy_asset",
     "png",
+    "multi-threaded",
     "x11",
 ] }
 

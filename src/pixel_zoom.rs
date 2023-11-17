@@ -46,6 +46,9 @@ pub(crate) fn pixel_zoom_system(
 ) {
     // Most of the change detection code is copied from `bevy_render/src/camera`
 
+    // TODO: maybe this can be replaced with just monitoring
+    // `OrthographicProjection` for changes?
+
     let primary_window = primary_window.iter().next();
 
     let mut changed_window_ids = HashSet::new();

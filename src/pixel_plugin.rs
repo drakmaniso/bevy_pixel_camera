@@ -37,7 +37,7 @@ impl Plugin for PixelCameraPlugin {
             )
             .add_systems(
                 PostUpdate,
-                super::pixel_zoom_system.before(camera::camera_system::<OrthographicProjection>),
+                super::pixel_zoom_system.after(camera::camera_system::<OrthographicProjection>),
             );
     }
 }

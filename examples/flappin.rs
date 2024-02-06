@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy_pixel_camera::{PixelCameraPlugin, PixelViewport, PixelZoom};
+use bevy_pixel_camera::{FitType, PixelCamScalingMode, PixelCameraPlugin, PixelViewport, PixelZoom};
 
 // GAME CONSTANTS /////////////////////////////////////////////////////////////
 
@@ -103,9 +103,12 @@ fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
 
     commands.spawn((
         Camera2dBundle::default(),
-        PixelZoom::FitSize {
-            width: WIDTH as i32,
-            height: HEIGHT as i32,
+        PixelZoom{
+            fit_type: FitType::FitSize {
+                width: WIDTH as i32,
+                height: HEIGHT as i32,
+            },
+            pixel_cam_scaling_mode: PixelCamScalingMode::AllowFloat
         },
         PixelViewport,
     ));

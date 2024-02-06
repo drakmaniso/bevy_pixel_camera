@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_pixel_camera::{PixelCameraPlugin, PixelViewport, PixelZoom};
+use bevy_pixel_camera::{FitType, PixelCamScalingMode, PixelCameraPlugin, PixelViewport, PixelZoom};
 
 const WIDTH: i32 = 320;
 const HEIGHT: i32 = 180;
@@ -19,9 +19,12 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // inside the window.
     commands.spawn((
         Camera2dBundle::default(),
-        PixelZoom::FitSize {
-            width: WIDTH,
-            height: HEIGHT,
+        PixelZoom{
+            fit_type: FitType::FitSize {
+                width: WIDTH,
+                height: HEIGHT,
+            },
+            pixel_cam_scaling_mode: PixelCamScalingMode::AllowFloat
         },
         PixelViewport,
     ));

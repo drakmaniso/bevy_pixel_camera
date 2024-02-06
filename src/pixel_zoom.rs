@@ -5,13 +5,9 @@ use bevy::{
     window::{PrimaryWindow, WindowCreated, WindowResized},
 };
 
-#[derive(Component, Debug, Clone, PartialEq)]
-/// Configure a `Camera2dBundle` to use integer scaling and automatically match
-/// a specified resolution.
-///
-/// Note: when this component is present, a plugin system will automatically
-/// update the `ScalingMode` of the camera bundle.
-pub enum PixelZoom {
+#[derive(Debug, Clone, PartialEq)]
+
+pub enum FitType {
     /// Manually specify the camera zoom, i.e. the number of screen pixels
     /// (logical pixels) used to display one virtual pixel (world unit).
     Fixed(i32),
@@ -26,6 +22,25 @@ pub enum PixelZoom {
     FitHeight(i32),
     /// Set the smaller of the screen dimensions to a specific length (e.g. 160px by whatever-the-long-edge-is)
     FitSmallerDim(i32),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PixelCamScalingMode {
+    /// Force the zoom to be an integer multiple (ensures perfectly square pixels)
+    ForceInteger,
+    /// allow zoom to be a float multiple (enables fitting the entire screen, but imperfectly square pixels)
+    AllowFloat
+}
+
+#[derive(Component, Debug, Clone, PartialEq)]
+/// Configure a `Camera2dBundle` to use integer scaling and automatically match
+/// a specified resolution.
+///
+/// Note: when this component is present, a plugin system will automatically
+/// update the `ScalingMode` of the camera bundle.
+pub struct PixelZoom {
+    pub fit_type: FitType,
+    pub pixel_cam_scaling_mode: PixelCamScalingMode
 }
 
 #[derive(Component, Debug, Clone, PartialEq)]
@@ -121,35 +136,66 @@ fn is_changed(
 }
 
 fn auto_zoom(mode: &PixelZoom, logical_size: Vec2) -> f32 {
-    match mode {
-        PixelZoom::FitSize { width, height } => {
-            let zoom_x = (logical_size.x as f32) / f32::max(*width as f32, 1.);
-            let zoom_y = (logical_size.y as f32) / f32::max(*height as f32, 1.);
-            let zoom = f32::min(zoom_x, zoom_y);
-            f32::max(zoom, 1.)
-        }
-        PixelZoom::FitWidth(width) => {
-            let zoom = (logical_size.x as f32) / f32::max(*width as f32, 1.);
-            f32::max(zoom, 1.)
-        }
-        PixelZoom::FitHeight(height) => {
-            let zoom = (logical_size.y as f32) / f32::max(*height as f32, 1.);
-            f32::max(zoom, 1.)
-        }
-        PixelZoom::Fixed(zoom) => *zoom as f32,
-        PixelZoom::FitSmallerDim(smaller_length) => {
-            let smaller_len = if logical_size.x < logical_size.y {
-                logical_size.x
-            } else {
-                logical_size.y
-            };
-
-            
-
-            let zoom = (smaller_len as f32) / f32::max(*smaller_length as f32, 1.);
-            f32::max(zoom, 1.)
-        }
+    match &mode.pixel_cam_scaling_mode {
+        PixelCamScalingMode::ForceInteger => {
+            match &mode.fit_type {
+                FitType::FitSize { width, height } => {
+                    let zoom_x = (logical_size.x as i32) / i32::max(*width as i32, 1);
+                    let zoom_y = (logical_size.y as i32) / i32::max(*height as i32, 1);
+                    let zoom = i32::min(zoom_x, zoom_y);
+                    i32::max(zoom, 1) as f32
+                }
+                FitType::FitWidth(width) => {
+                    let zoom = (logical_size.x as i32) / i32::max(*width as i32, 1);
+                    i32::max(zoom, 1) as f32
+                }
+                FitType::FitHeight(height) => {
+                    let zoom = (logical_size.y as i32) / i32::max(*height as i32, 1);
+                    i32::max(zoom, 1) as f32
+                }
+                FitType::Fixed(zoom) => *zoom as f32,
+                FitType::FitSmallerDim(smaller_length) => {
+                    let smaller_len = if logical_size.x < logical_size.y {
+                        logical_size.x
+                    } else {
+                        logical_size.y
+                    };
+                    let zoom = (smaller_len as i32) / i32::max(*smaller_length as i32, 1);
+                    i32::max(zoom, 1) as f32
+                }
+            }
+        },
+        PixelCamScalingMode::AllowFloat => {
+            match &mode.fit_type {
+                FitType::FitSize { width, height } => {
+                    let zoom_x = (logical_size.x as f32) / f32::max(*width as f32, 1.);
+                    let zoom_y = (logical_size.y as f32) / f32::max(*height as f32, 1.);
+                    let zoom = f32::min(zoom_x, zoom_y);
+                    f32::max(zoom, 1.)
+                }
+                FitType::FitWidth(width) => {
+                    let zoom = (logical_size.x as f32) / f32::max(*width as f32, 1.);
+                    f32::max(zoom, 1.)
+                }
+                FitType::FitHeight(height) => {
+                    let zoom = (logical_size.y as f32) / f32::max(*height as f32, 1.);
+                    f32::max(zoom, 1.)
+                }
+                FitType::Fixed(zoom) => *zoom as f32,
+                FitType::FitSmallerDim(smaller_length) => {
+                    let smaller_len = if logical_size.x < logical_size.y {
+                        logical_size.x
+                    } else {
+                        logical_size.y
+                    };
+                    let zoom = (smaller_len as f32) / f32::max(*smaller_length as f32, 1.);
+                    f32::max(zoom, 1.)
+                }
+            }
+        },
+        
     }
+    
 }
 
 fn set_viewport(
@@ -159,12 +205,12 @@ fn set_viewport(
     physical_size: UVec2,
     logical_size: Vec2,
 ) {
-    let (auto_width, auto_height) = match mode {
-        PixelZoom::FitSize { width, height } => (Some(*width), Some(*height)),
-        PixelZoom::FitWidth(width) => (Some(*width), None),
-        PixelZoom::FitHeight(height) => (None, Some(*height)),
-        PixelZoom::Fixed(..) => (None, None),
-        PixelZoom::FitSmallerDim(_) => (None, None),
+    let (auto_width, auto_height) = match &mode.fit_type {
+        FitType::FitSize { width, height } => (Some(*width), Some(*height)),
+        FitType::FitWidth(width) => (Some(*width), None),
+        FitType::FitHeight(height) => (None, Some(*height)),
+        FitType::Fixed(..) => (None, None),
+        FitType::FitSmallerDim(_) => (None, None),
     };
 
     let scale_factor = (physical_size.x as f32) / logical_size.x;

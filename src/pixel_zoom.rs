@@ -120,23 +120,23 @@ fn is_changed(
     }
 }
 
-fn auto_zoom(mode: &PixelZoom, logical_size: Vec2) -> i32 {
+fn auto_zoom(mode: &PixelZoom, logical_size: Vec2) -> f32 {
     match mode {
         PixelZoom::FitSize { width, height } => {
-            let zoom_x = (logical_size.x as i32) / i32::max(*width, 1);
-            let zoom_y = (logical_size.y as i32) / i32::max(*height, 1);
-            let zoom = i32::min(zoom_x, zoom_y);
-            i32::max(zoom, 1)
+            let zoom_x = (logical_size.x as f32) / f32::max(*width as f32, 1.);
+            let zoom_y = (logical_size.y as f32) / f32::max(*height as f32, 1.);
+            let zoom = f32::min(zoom_x, zoom_y);
+            f32::max(zoom, 1.)
         }
         PixelZoom::FitWidth(width) => {
-            let zoom = (logical_size.x as i32) / i32::max(*width, 1);
-            i32::max(zoom, 1)
+            let zoom = (logical_size.x as f32) / f32::max(*width as f32, 1.);
+            f32::max(zoom, 1.)
         }
         PixelZoom::FitHeight(height) => {
-            let zoom = (logical_size.y as i32) / i32::max(*height, 1);
-            i32::max(zoom, 1)
+            let zoom = (logical_size.y as f32) / f32::max(*height as f32, 1.);
+            f32::max(zoom, 1.)
         }
-        PixelZoom::Fixed(zoom) => *zoom,
+        PixelZoom::Fixed(zoom) => *zoom as f32,
         PixelZoom::FitSmallerDim(smaller_length) => {
             let smaller_len = if logical_size.x > logical_size.y {
                 logical_size.x
@@ -146,8 +146,8 @@ fn auto_zoom(mode: &PixelZoom, logical_size: Vec2) -> i32 {
 
             
 
-            let zoom = (smaller_len as i32) / i32::max(*smaller_length, 1);
-            i32::max(zoom, 1)
+            let zoom = (smaller_len as f32) / f32::max(*smaller_length as f32, 1.);
+            f32::max(zoom, 1.)
         }
     }
 }

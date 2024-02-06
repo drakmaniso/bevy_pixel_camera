@@ -32,5 +32,9 @@ name = "flappin"
 required-features = ["bevy/bevy_winit", "bevy/bevy_asset", "bevy/png"]
 
 [[example]]
-name = "mire"
+name = "float_scaling"
+required-features = ["bevy/bevy_winit", "bevy/bevy_asset", "bevy/png"]
+
+[[example]]
+name = "integer_scaling"
 required-features = ["bevy/bevy_winit", "bevy/bevy_asset", "bevy/png"]

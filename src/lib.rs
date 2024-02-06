@@ -2,11 +2,13 @@
 //! pixel-art sprites.
 //!
 //! This crates provides a plugin to automatically configure Bevy's
-//! `Camera2dBundle`. It works by setting the camera to an integer scaling
+//! `Camera2dBundle`. It works by setting the camera to a scaling
 //! factor (using Bevy's `ScalingMode::WindowSize`), and automatically updating
 //! the zoom level so that the specified target resolution fills as much of the
 //! sceen as possible.
 //!
+//! Two scaling types are supported: Forcing integer scaling (guranteeing perfectly square pixels), or allowing float scaling (allowing filling the whole screen).
+//! 
 //! The plugin can also automatically set and resize the viewport of the camera
 //! to match the target resolution.
 //!

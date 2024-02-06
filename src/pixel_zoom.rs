@@ -33,13 +33,16 @@ pub enum PixelCamScalingMode {
 }
 
 #[derive(Component, Debug, Clone, PartialEq)]
-/// Configure a `Camera2dBundle` to use integer scaling and automatically match
+/// Configure a `Camera2dBundle` to use scaling and automatically match
 /// a specified resolution.
 ///
 /// Note: when this component is present, a plugin system will automatically
 /// update the `ScalingMode` of the camera bundle.
 pub struct PixelZoom {
+
+    /// What type of fitting to use - e.g. fixed width/height, set width, etc...
     pub fit_type: FitType,
+    /// Whether to force integer scaling or allow float scaling
     pub pixel_cam_scaling_mode: PixelCamScalingMode
 }
 

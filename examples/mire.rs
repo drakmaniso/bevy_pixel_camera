@@ -24,7 +24,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 width: WIDTH,
                 height: HEIGHT,
             },
-            pixel_cam_scaling_mode: PixelCamScalingMode::AllowFloat
+            pixel_cam_scaling_mode: PixelCamScalingMode::ForceInteger
         },
         PixelViewport,
     ));

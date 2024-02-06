@@ -138,7 +138,7 @@ fn auto_zoom(mode: &PixelZoom, logical_size: Vec2) -> f32 {
         }
         PixelZoom::Fixed(zoom) => *zoom as f32,
         PixelZoom::FitSmallerDim(smaller_length) => {
-            let smaller_len = if logical_size.x > logical_size.y {
+            let smaller_len = if logical_size.x < logical_size.y {
                 logical_size.x
             } else {
                 logical_size.y

@@ -24,6 +24,8 @@ pub enum PixelZoom {
     /// Automatically set the camera zoom to fit the specified height inside the
     /// window.
     FitHeight(i32),
+    /// Set the smaller of the screen dimensions to a specific length (e.g. 160px by whatever-the-long-edge-is)
+    FitSmallerDim(i32),
 }
 
 #[derive(Component, Debug, Clone, PartialEq)]
@@ -135,6 +137,18 @@ fn auto_zoom(mode: &PixelZoom, logical_size: Vec2) -> i32 {
             i32::max(zoom, 1)
         }
         PixelZoom::Fixed(zoom) => *zoom,
+        PixelZoom::FitSmallerDim(smaller_length) => {
+            let smaller_len = if logical_size.x > logical_size.y {
+                logical_size.x
+            } else {
+                logical_size.y
+            };
+
+            
+
+            let zoom = (smaller_len as i32) / i32::max(*smaller_length, 1);
+            i32::max(zoom, 1)
+        }
     }
 }
 
@@ -150,6 +164,7 @@ fn set_viewport(
         PixelZoom::FitWidth(width) => (Some(*width), None),
         PixelZoom::FitHeight(height) => (None, Some(*height)),
         PixelZoom::Fixed(..) => (None, None),
+        PixelZoom::FitSmallerDim(_) => (None, None),
     };
 
     let scale_factor = (physical_size.x as f32) / logical_size.x;

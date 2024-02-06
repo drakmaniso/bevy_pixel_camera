@@ -51,7 +51,7 @@ the center by default), otherwise it won't be aligned with virtual pixels.
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_pixel_camera::{
-    PixelCameraPlugin, PixelZoom, PixelViewport
+    FitType, PixelCamScalingMode, PixelCameraPlugin, PixelViewport, PixelZoom
 };
 
 fn main() {
@@ -68,9 +68,12 @@ fn setup(
 ) {
     commands.spawn((
         Camera2dBundle::default(),
-        PixelZoom::FitSize {
-            width: 320,
-            height: 180,
+        PixelZoom{
+            fit_type: FitType::FitSize {
+                width: 320,
+                height: 180,
+            },
+            pixel_cam_scaling_mode: PixelCamScalingMode::AllowFloat,
         },
         PixelViewport,
     ));

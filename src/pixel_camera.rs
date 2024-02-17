@@ -40,7 +40,7 @@ impl PixelCameraBundle {
             pixel_projection.far(),
         );
         Self {
-            camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
+            camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::Core2d),
             pixel_projection,
             visible_entities: Default::default(),
             frustum,
@@ -239,13 +239,13 @@ pub(crate) fn update_pixel_camera_viewport(
     windows: Query<&Window>,
     mut cameras: Query<(&mut Camera, &PixelProjection), With<PixelProjection>>,
 ) {
-    for event in resize_events.iter() {
+    for event in resize_events.read() {
         let window = windows.get(event.window).unwrap(); // TODO: better than unwrap?
         for (mut camera, projection) in cameras.iter_mut() {
             //TODO
             if projection.set_viewport {
                 let zoom = projection.desired_zoom(event.width, event.height);
-                let scale_factor = window.resolution.scale_factor();
+                let scale_factor = window.resolution.scale_factor() as f64;
                 let viewport_width;
                 let viewport_height;
                 let viewport_x;

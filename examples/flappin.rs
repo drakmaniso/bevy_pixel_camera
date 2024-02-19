@@ -41,7 +41,7 @@ enum GameState {
 
 fn main() {
     App::new()
-        .add_state::<GameState>()
+        .init_state::<GameState>()
         .add_plugins(
             DefaultPlugins
                 .set(ImagePlugin::default_nearest())
@@ -125,9 +125,9 @@ struct Action {
 }
 
 fn on_press(
-    keyboard: Res<Input<KeyCode>>,
-    mouse_buttons: Res<Input<MouseButton>>,
-    gamepad_buttons: Res<Input<GamepadButton>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
+    gamepad_buttons: Res<ButtonInput<GamepadButton>>,
     touches: Res<Touches>,
 
     mut action: ResMut<Action>,
@@ -185,16 +185,20 @@ struct BirdTimer(Timer);
 fn spawn_bird(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let texture_atlas = texture_atlases.add(TextureAtlas::from_grid(
-        asset_server.load("flappin-bird.png"),
+    let texture: Handle<Image> = asset_server.load("flappin-bird.png");
+    let texture_atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
         Vec2::new(28.0, 23.0),
         4,
         1,
         None,
         None,
     ));
+    let texture_atlas = TextureAtlas {
+        layout: texture_atlas_layout,
+        index: 0,
+    };
     commands.spawn((
         Bird,
         BirdPhysics {
@@ -202,9 +206,10 @@ fn spawn_bird(
             acceleration: 0.0,
         },
         SpriteSheetBundle {
-            texture_atlas,
+            atlas: texture_atlas,
+            texture,
             transform: Transform::from_translation(Vec3::new(BIRD_X, 0.0, 1.0)),
-            sprite: TextureAtlasSprite {
+            sprite: Sprite {
                 anchor: Anchor::BottomLeft,
                 ..Default::default()
             },
@@ -216,7 +221,7 @@ fn spawn_bird(
 
 fn animate_flying_bird(
     time: Res<Time>,
-    mut query: Query<(&mut BirdTimer, &mut TextureAtlasSprite), With<Bird>>,
+    mut query: Query<(&mut BirdTimer, &mut TextureAtlas), With<Bird>>,
 ) {
     for (mut timer, mut sprite) in query.iter_mut() {
         timer.0.tick(time.delta());
@@ -228,7 +233,7 @@ fn animate_flying_bird(
 
 fn animate_flappin_bird(
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut BirdPhysics, &mut TextureAtlasSprite), With<Bird>>,
+    mut query: Query<(&mut Transform, &mut BirdPhysics, &mut TextureAtlas), With<Bird>>,
 ) {
     for (mut transform, mut physics, mut sprite) in query.iter_mut() {
         let dt = time.delta().as_secs_f32();
@@ -256,7 +261,7 @@ fn flap(mut action: ResMut<Action>, mut birds: Query<&mut BirdPhysics, With<Bird
     }
 }
 
-fn game_over(mut timer: ResMut<FlapTimer>, mut birds: Query<&mut TextureAtlasSprite, With<Bird>>) {
+fn game_over(mut timer: ResMut<FlapTimer>, mut birds: Query<&mut TextureAtlas, With<Bird>>) {
     timer.reset();
     for mut sprite in birds.iter_mut() {
         sprite.index = 3;
@@ -307,17 +312,21 @@ struct Pillar;
 fn spawn_pillars(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut rng: ResMut<Rng>,
 ) {
-    let atlas = texture_atlases.add(TextureAtlas::from_grid(
-        asset_server.load("flappin-pillars.png"),
+    let texture = asset_server.load("flappin-pillars.png");
+    let atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
         Vec2::new(PILLAR_WIDTH, PILLAR_HEIGHT),
         1,
         1,
         None,
         None,
     ));
+    let atlas = TextureAtlas {
+        layout: atlas_layout,
+        index: 0,
+    };
 
     let mut x = RIGHT;
     while x < RIGHT + WIDTH + PILLAR_SPACING {
@@ -325,9 +334,10 @@ fn spawn_pillars(
         commands.spawn((
             Pillar,
             SpriteSheetBundle {
-                texture_atlas: atlas.clone(),
+                atlas: atlas.clone(),
+                texture: texture.clone(),
                 transform: Transform::from_xyz(x, (y - PILLAR_HEIGHT / 2.0).round(), 2.0),
-                sprite: TextureAtlasSprite {
+                sprite: Sprite {
                     anchor: Anchor::BottomLeft,
                     ..Default::default()
                 },
@@ -368,28 +378,34 @@ struct Cloud;
 fn spawn_clouds(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut rng: ResMut<Rng>,
 ) {
-    let clouds_atlas = texture_atlases.add(TextureAtlas::from_grid(
-        asset_server.load("flappin-clouds.png"),
+    let texture = asset_server.load("flappin-clouds.png");
+    let clouds_atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
         Vec2::new(CLOUD_WIDTH, CLOUD_HEIGHT),
         4,
         1,
         None,
         None,
     ));
+    let clouds_atlas = TextureAtlas {
+        layout: clouds_atlas_layout.clone(),
+        index: 0,
+    };
 
     let mut x = LEFT;
     while x < RIGHT {
         let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
+        let mut atlas = clouds_atlas.clone();
+        atlas.index = rng.rand_range(0..4) as usize;
         commands.spawn((
             Cloud,
             SpriteSheetBundle {
-                texture_atlas: clouds_atlas.clone(),
+                atlas,
+                texture: texture.clone(),
                 transform: Transform::from_xyz(x, y, 0.0),
-                sprite: TextureAtlasSprite {
-                    index: rng.rand_range(0..4) as usize,
+                sprite: Sprite {
                     anchor: Anchor::BottomLeft,
                     ..Default::default()
                 },
@@ -403,15 +419,15 @@ fn spawn_clouds(
 fn animate_clouds(
     time: Res<Time>,
     mut rng: ResMut<Rng>,
-    mut query: Query<(&mut Transform, &mut TextureAtlasSprite), With<Cloud>>,
+    mut query: Query<(&mut Transform, &mut TextureAtlas, &mut Sprite), With<Cloud>>,
 ) {
     let dt = time.delta().as_secs_f32();
-    for (mut transform, mut sprite) in query.iter_mut() {
+    for (mut transform, mut atlas, mut sprite) in query.iter_mut() {
         *transform = transform.mul_transform(Transform::from_xyz(-30.0 * dt, 0.0, 0.0));
         if transform.translation.x + CLOUD_WIDTH < LEFT {
             let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
             *transform = Transform::from_xyz(RIGHT, y, 0.0);
-            sprite.index = rng.rand_range(0..4) as usize;
+            atlas.index = rng.rand_range(0..4) as usize;
             sprite.flip_x = rng.rand_range(0..2) > 0;
         }
     }

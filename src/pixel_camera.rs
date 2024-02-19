@@ -40,14 +40,16 @@ impl PixelCameraBundle {
             pixel_projection.far(),
         );
         Self {
-            camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::Core2d),
+            camera_render_graph: CameraRenderGraph::new(
+                bevy::core_pipeline::core_2d::graph::Core2d,
+            ),
             pixel_projection,
             visible_entities: Default::default(),
             frustum,
             transform,
             global_transform: Default::default(),
             camera: Camera::default(),
-            camera_2d: Camera2d::default(),
+            camera_2d: Camera2d,
         }
     }
 

@@ -95,11 +95,46 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands, time: Res<Time>, mut rng: ResMut<Rng>) {
+#[derive(Resource)]
+struct Textures {
+    bird: Handle<Image>,
+    bird_layout: Handle<TextureAtlasLayout>,
+    pillars: Handle<Image>,
+    clouds: Handle<Image>,
+    clouds_layout: Handle<TextureAtlasLayout>,
+}
+
+fn setup(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut rng: ResMut<Rng>,
+    asset_server: Res<AssetServer>,
+    mut atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
     *rng = Rng {
         mz: time.elapsed().as_secs() as u32,
         mw: 678,
     };
+
+    commands.insert_resource(Textures {
+        bird: asset_server.load("flappin-bird.png"),
+        bird_layout: atlas_layouts.add(TextureAtlasLayout::from_grid(
+            Vec2::new(28.0, 23.0),
+            4,
+            1,
+            None,
+            None,
+        )),
+        pillars: asset_server.load("flappin-pillars.png"),
+        clouds: asset_server.load("flappin-clouds.png"),
+        clouds_layout: atlas_layouts.add(TextureAtlasLayout::from_grid(
+            Vec2::new(CLOUD_WIDTH, CLOUD_HEIGHT),
+            4,
+            1,
+            None,
+            None,
+        )),
+    });
 
     commands.spawn((
         Camera2dBundle::default(),
@@ -182,23 +217,7 @@ struct BirdPhysics {
 #[derive(Component)]
 struct BirdTimer(Timer);
 
-fn spawn_bird(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    let texture: Handle<Image> = asset_server.load("flappin-bird.png");
-    let texture_atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
-        Vec2::new(28.0, 23.0),
-        4,
-        1,
-        None,
-        None,
-    ));
-    let texture_atlas = TextureAtlas {
-        layout: texture_atlas_layout,
-        index: 0,
-    };
+fn spawn_bird(mut commands: Commands, textures: Res<Textures>) {
     commands.spawn((
         Bird,
         BirdPhysics {
@@ -206,8 +225,11 @@ fn spawn_bird(
             acceleration: 0.0,
         },
         SpriteSheetBundle {
-            atlas: texture_atlas,
-            texture,
+            texture: textures.bird.clone(),
+            atlas: TextureAtlas {
+                layout: textures.bird_layout.clone(),
+                index: 0,
+            },
             transform: Transform::from_translation(Vec3::new(BIRD_X, 0.0, 1.0)),
             sprite: Sprite {
                 anchor: Anchor::BottomLeft,
@@ -309,33 +331,14 @@ fn collision_detection(
 #[derive(Component)]
 struct Pillar;
 
-fn spawn_pillars(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    mut rng: ResMut<Rng>,
-) {
-    let texture = asset_server.load("flappin-pillars.png");
-    let atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
-        Vec2::new(PILLAR_WIDTH, PILLAR_HEIGHT),
-        1,
-        1,
-        None,
-        None,
-    ));
-    let atlas = TextureAtlas {
-        layout: atlas_layout,
-        index: 0,
-    };
-
+fn spawn_pillars(mut commands: Commands, textures: Res<Textures>, mut rng: ResMut<Rng>) {
     let mut x = RIGHT;
     while x < RIGHT + WIDTH + PILLAR_SPACING {
         let y = (rng.rand_range(0..PILLAR_RANGE as u32) as f32 - PILLAR_RANGE / 2.0).round();
         commands.spawn((
             Pillar,
-            SpriteSheetBundle {
-                atlas: atlas.clone(),
-                texture: texture.clone(),
+            SpriteBundle {
+                texture: textures.pillars.clone(),
                 transform: Transform::from_xyz(x, (y - PILLAR_HEIGHT / 2.0).round(), 2.0),
                 sprite: Sprite {
                     anchor: Anchor::BottomLeft,
@@ -375,35 +378,18 @@ fn despawn_pillars(mut commands: Commands, pillars: Query<Entity, With<Pillar>>)
 #[derive(Component)]
 struct Cloud;
 
-fn spawn_clouds(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    mut rng: ResMut<Rng>,
-) {
-    let texture = asset_server.load("flappin-clouds.png");
-    let clouds_atlas_layout = texture_atlases.add(TextureAtlasLayout::from_grid(
-        Vec2::new(CLOUD_WIDTH, CLOUD_HEIGHT),
-        4,
-        1,
-        None,
-        None,
-    ));
-    let clouds_atlas = TextureAtlas {
-        layout: clouds_atlas_layout.clone(),
-        index: 0,
-    };
-
+fn spawn_clouds(mut commands: Commands, textures: Res<Textures>, mut rng: ResMut<Rng>) {
     let mut x = LEFT;
     while x < RIGHT {
         let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
-        let mut atlas = clouds_atlas.clone();
-        atlas.index = rng.rand_range(0..4) as usize;
         commands.spawn((
             Cloud,
             SpriteSheetBundle {
-                atlas,
-                texture: texture.clone(),
+                texture: textures.clouds.clone(),
+                atlas: TextureAtlas {
+                    layout: textures.clouds_layout.clone(),
+                    index: rng.rand_range(0..4) as usize,
+                },
                 transform: Transform::from_xyz(x, y, 0.0),
                 sprite: Sprite {
                     anchor: Anchor::BottomLeft,

@@ -28,7 +28,7 @@ impl Plugin for PixelCameraPlugin {
             .add_systems(
                 PostUpdate,
                 visibility::update_frusta::<PixelProjection>
-                    .in_set(visibility::VisibilitySystems::UpdateOrthographicFrusta)
+                    .in_set(visibility::VisibilitySystems::UpdateFrusta)
                     .after(camera::camera_system::<PixelProjection>)
                     .after(TransformSystem::TransformPropagate)
                     .ambiguous_with(visibility::update_frusta::<PerspectiveProjection>)

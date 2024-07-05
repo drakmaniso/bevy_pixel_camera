@@ -11,8 +11,8 @@ const RIGHT: f32 = LEFT + WIDTH;
 const BOTTOM: f32 = -HEIGHT / 2.0;
 const _TOP: f32 = BOTTOM + HEIGHT;
 
-const CLOUD_WIDTH: f32 = 66.0;
-const CLOUD_HEIGHT: f32 = 20.0;
+const CLOUD_WIDTH: u32 = 66;
+const CLOUD_HEIGHT: u32 = 20;
 
 const PILLAR_WIDTH: f32 = 21.0;
 const PILLAR_HEIGHT: f32 = 482.0;
@@ -41,7 +41,6 @@ enum GameState {
 
 fn main() {
     App::new()
-        .init_state::<GameState>()
         .add_plugins(
             DefaultPlugins
                 .set(ImagePlugin::default_nearest())
@@ -56,15 +55,15 @@ fn main() {
                 }),
         )
         .add_plugins(PixelCameraPlugin)
+        .init_state::<GameState>()
         .insert_resource(Rng { mz: 0, mw: 0 })
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+        .insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
         .insert_resource(FlapTimer(Timer::from_seconds(0.5, TimerMode::Once)))
         .insert_resource(Action {
             just_pressed: false,
         })
         .add_systems(Startup, setup)
         .add_systems(Startup, (spawn_bird, spawn_clouds).after(setup))
-        .add_systems(Update, bevy::window::close_on_esc)
         .add_systems(Update, on_press)
         .add_systems(
             Update,
@@ -119,7 +118,7 @@ fn setup(
     commands.insert_resource(Textures {
         bird: asset_server.load("flappin-bird.png"),
         bird_layout: atlas_layouts.add(TextureAtlasLayout::from_grid(
-            Vec2::new(28.0, 23.0),
+            UVec2::new(28, 23),
             4,
             1,
             None,
@@ -128,7 +127,7 @@ fn setup(
         pillars: asset_server.load("flappin-pillars.png"),
         clouds: asset_server.load("flappin-clouds.png"),
         clouds_layout: atlas_layouts.add(TextureAtlasLayout::from_grid(
-            Vec2::new(CLOUD_WIDTH, CLOUD_HEIGHT),
+            UVec2::new(CLOUD_WIDTH, CLOUD_HEIGHT),
             4,
             1,
             None,
@@ -224,18 +223,18 @@ fn spawn_bird(mut commands: Commands, textures: Res<Textures>) {
             velocity: 100.0,
             acceleration: 0.0,
         },
-        SpriteSheetBundle {
+        SpriteBundle {
             texture: textures.bird.clone(),
-            atlas: TextureAtlas {
-                layout: textures.bird_layout.clone(),
-                index: 0,
-            },
             transform: Transform::from_translation(Vec3::new(BIRD_X, 0.0, 1.0)),
             sprite: Sprite {
                 anchor: Anchor::BottomLeft,
                 ..Default::default()
             },
             ..Default::default()
+        },
+        TextureAtlas {
+            layout: textures.bird_layout.clone(),
+            index: 0,
         },
         BirdTimer(Timer::from_seconds(0.150, TimerMode::Repeating)),
     ));
@@ -381,15 +380,12 @@ struct Cloud;
 fn spawn_clouds(mut commands: Commands, textures: Res<Textures>, mut rng: ResMut<Rng>) {
     let mut x = LEFT;
     while x < RIGHT {
-        let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
+        let y =
+            BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT as f32) as u32) as f32;
         commands.spawn((
             Cloud,
-            SpriteSheetBundle {
+            SpriteBundle {
                 texture: textures.clouds.clone(),
-                atlas: TextureAtlas {
-                    layout: textures.clouds_layout.clone(),
-                    index: rng.rand_range(0..4) as usize,
-                },
                 transform: Transform::from_xyz(x, y, 0.0),
                 sprite: Sprite {
                     anchor: Anchor::BottomLeft,
@@ -397,8 +393,12 @@ fn spawn_clouds(mut commands: Commands, textures: Res<Textures>, mut rng: ResMut
                 },
                 ..Default::default()
             },
+            TextureAtlas {
+                layout: textures.clouds_layout.clone(),
+                index: rng.rand_range(0..4) as usize,
+            },
         ));
-        x += CLOUD_WIDTH;
+        x += CLOUD_WIDTH as f32;
     }
 }
 
@@ -410,8 +410,10 @@ fn animate_clouds(
     let dt = time.delta().as_secs_f32();
     for (mut transform, mut atlas, mut sprite) in query.iter_mut() {
         *transform = transform.mul_transform(Transform::from_xyz(-30.0 * dt, 0.0, 0.0));
-        if transform.translation.x + CLOUD_WIDTH < LEFT {
-            let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
+        if (transform.translation.x + CLOUD_WIDTH as f32) < LEFT {
+            let y = BOTTOM
+                + 40.0
+                + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT as f32) as u32) as f32;
             *transform = Transform::from_xyz(RIGHT, y, 0.0);
             atlas.index = rng.rand_range(0..4) as usize;
             sprite.flip_x = rng.rand_range(0..2) > 0;

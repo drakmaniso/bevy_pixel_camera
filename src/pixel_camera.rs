@@ -32,8 +32,8 @@ impl PixelCameraBundle {
     pub fn new(pixel_projection: PixelProjection) -> Self {
         let transform = Transform::from_xyz(0.0, 0.0, 0.0);
         let view_projection =
-            pixel_projection.get_projection_matrix() * transform.compute_matrix().inverse();
-        let frustum = Frustum::from_view_projection_custom_far(
+            pixel_projection.get_clip_from_view() * transform.compute_matrix().inverse();
+        let frustum = Frustum::from_clip_from_world_custom_far(
             &view_projection,
             &transform.translation,
             &transform.back(),
@@ -144,7 +144,7 @@ pub struct PixelProjection {
 }
 
 impl CameraProjection for PixelProjection {
-    fn get_projection_matrix(&self) -> Mat4 {
+    fn get_clip_from_view(&self) -> Mat4 {
         Mat4::orthographic_rh(
             self.left,
             self.right,

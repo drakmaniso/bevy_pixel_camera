@@ -6,11 +6,10 @@ const HEIGHT: i32 = 180;
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::rgb(0.2, 0.2, 0.2)))
+        .insert_resource(ClearColor(Color::srgb(0.2, 0.2, 0.2)))
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugins(PixelCameraPlugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, bevy::window::close_on_esc)
         .run();
 }
 

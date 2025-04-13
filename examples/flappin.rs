@@ -1,3 +1,4 @@
+use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use bevy_pixel_camera::{PixelCameraPlugin, PixelViewport, PixelZoom};
@@ -41,30 +42,28 @@ enum GameState {
 
 fn main() {
     App::new()
-        .init_state::<GameState>()
-        .add_plugins(
-            DefaultPlugins
-                .set(ImagePlugin::default_nearest())
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "Flappin'".to_string(),
-                        // resolution: bevy::window::WindowResolution::default()
-                        //     .with_scale_factor_override(1.0),
-                        ..default()
-                    }),
+        .add_plugins((DefaultPlugins
+            .set(ImagePlugin::default_nearest())
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Flappin'".to_string(),
+                    // resolution: bevy::window::WindowResolution::default()
+                    //     .with_scale_factor_override(1.0),
                     ..default()
                 }),
-        )
+                ..default()
+            }),))
         .add_plugins(PixelCameraPlugin)
+        .insert_state(GameState::default())
         .insert_resource(Rng { mz: 0, mw: 0 })
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
+        .insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
         .insert_resource(FlapTimer(Timer::from_seconds(0.5, TimerMode::Once)))
         .insert_resource(Action {
             just_pressed: false,
         })
         .add_systems(Startup, setup)
         .add_systems(Startup, (spawn_bird, spawn_clouds).after(setup))
-        .add_systems(Update, bevy::window::close_on_esc)
+        .add_systems(Update, close_on_esc)
         .add_systems(Update, on_press)
         .add_systems(
             Update,
@@ -119,7 +118,7 @@ fn setup(
     commands.insert_resource(Textures {
         bird: asset_server.load("flappin-bird.png"),
         bird_layout: atlas_layouts.add(TextureAtlasLayout::from_grid(
-            Vec2::new(28.0, 23.0),
+            UVec2::new(28, 23),
             4,
             1,
             None,
@@ -128,7 +127,7 @@ fn setup(
         pillars: asset_server.load("flappin-pillars.png"),
         clouds: asset_server.load("flappin-clouds.png"),
         clouds_layout: atlas_layouts.add(TextureAtlasLayout::from_grid(
-            Vec2::new(CLOUD_WIDTH, CLOUD_HEIGHT),
+            Vec2::new(CLOUD_WIDTH, CLOUD_HEIGHT).as_uvec2(),
             4,
             1,
             None,
@@ -137,7 +136,7 @@ fn setup(
     });
 
     commands.spawn((
-        Camera2dBundle::default(),
+        Camera2d,
         PixelZoom::FitSize {
             width: WIDTH as i32,
             height: HEIGHT as i32,
@@ -162,14 +161,14 @@ struct Action {
 fn on_press(
     keyboard: Res<ButtonInput<KeyCode>>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    gamepad_buttons: Res<ButtonInput<GamepadButton>>,
+    // gamepad_buttons: Res<ButtonInput<GamepadButton>>,
     touches: Res<Touches>,
 
     mut action: ResMut<Action>,
 ) {
     if keyboard.get_just_pressed().next().is_some()
         || mouse_buttons.get_just_pressed().next().is_some()
-        || gamepad_buttons.get_just_pressed().next().is_some()
+        // || gamepad_buttons.get_just_pressed().next().is_some()
         || touches.iter_just_pressed().next().is_some()
     {
         action.just_pressed = true;
@@ -217,6 +216,25 @@ struct BirdPhysics {
 #[derive(Component)]
 struct BirdTimer(Timer);
 
+fn mk_sprite(
+    pos: Vec3,
+    anchor: Anchor,
+    index: usize,
+    image: Handle<Image>,
+    layout: Handle<TextureAtlasLayout>,
+) -> (Sprite, Transform) {
+    (
+        Sprite {
+            image,
+            anchor,
+            texture_atlas: Some(TextureAtlas { layout, index }),
+
+            ..Default::default()
+        },
+        Transform::from_translation(pos),
+    )
+}
+
 fn spawn_bird(mut commands: Commands, textures: Res<Textures>) {
     commands.spawn((
         Bird,
@@ -224,38 +242,34 @@ fn spawn_bird(mut commands: Commands, textures: Res<Textures>) {
             velocity: 100.0,
             acceleration: 0.0,
         },
-        SpriteSheetBundle {
-            texture: textures.bird.clone(),
-            atlas: TextureAtlas {
-                layout: textures.bird_layout.clone(),
-                index: 0,
-            },
-            transform: Transform::from_translation(Vec3::new(BIRD_X, 0.0, 1.0)),
-            sprite: Sprite {
-                anchor: Anchor::BottomLeft,
-                ..Default::default()
-            },
-            ..Default::default()
-        },
+        mk_sprite(
+            vec3(BIRD_X, 0.0, 1.0),
+            Anchor::BottomLeft,
+            0,
+            textures.bird.clone(),
+            textures.bird_layout.clone(),
+        ),
         BirdTimer(Timer::from_seconds(0.150, TimerMode::Repeating)),
     ));
 }
 
 fn animate_flying_bird(
     time: Res<Time>,
-    mut query: Query<(&mut BirdTimer, &mut TextureAtlas), With<Bird>>,
+    mut query: Query<(&mut BirdTimer, &mut Sprite), With<Bird>>,
 ) {
     for (mut timer, mut sprite) in query.iter_mut() {
         timer.0.tick(time.delta());
         if timer.0.finished() {
-            sprite.index = (sprite.index + 1) % 3;
+            let atlas = sprite.texture_atlas.as_mut().unwrap();
+
+            atlas.index = (atlas.index + 1) % 4;
         }
     }
 }
 
 fn animate_flappin_bird(
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut BirdPhysics, &mut TextureAtlas), With<Bird>>,
+    mut query: Query<(&mut Transform, &mut BirdPhysics, &mut Sprite), With<Bird>>,
 ) {
     for (mut transform, mut physics, mut sprite) in query.iter_mut() {
         let dt = time.delta().as_secs_f32();
@@ -263,13 +277,16 @@ fn animate_flappin_bird(
         *transform = Transform::from_xyz(BIRD_X, y, 1.0);
         physics.velocity += physics.acceleration * dt;
         physics.acceleration += FALLING_JERK * dt;
-        sprite.index = if physics.acceleration < -1200.0 {
+
+        let atlas = sprite.texture_atlas.as_mut().unwrap();
+
+        atlas.index = if physics.acceleration < -1200.0 {
             2
         } else if physics.acceleration > -300.0 {
             0
         } else {
             1
-        }
+        };
     }
 }
 
@@ -283,10 +300,13 @@ fn flap(mut action: ResMut<Action>, mut birds: Query<&mut BirdPhysics, With<Bird
     }
 }
 
-fn game_over(mut timer: ResMut<FlapTimer>, mut birds: Query<&mut TextureAtlas, With<Bird>>) {
+fn game_over(mut timer: ResMut<FlapTimer>, mut birds: Query<&mut Sprite, With<Bird>>) {
     timer.reset();
+
     for mut sprite in birds.iter_mut() {
-        sprite.index = 3;
+        if let Some(atlas) = sprite.texture_atlas.as_mut() {
+            atlas.index = 3;
+        }
     }
 }
 
@@ -337,15 +357,12 @@ fn spawn_pillars(mut commands: Commands, textures: Res<Textures>, mut rng: ResMu
         let y = (rng.rand_range(0..PILLAR_RANGE as u32) as f32 - PILLAR_RANGE / 2.0).round();
         commands.spawn((
             Pillar,
-            SpriteBundle {
-                texture: textures.pillars.clone(),
-                transform: Transform::from_xyz(x, (y - PILLAR_HEIGHT / 2.0).round(), 2.0),
-                sprite: Sprite {
-                    anchor: Anchor::BottomLeft,
-                    ..Default::default()
-                },
+            Sprite {
+                anchor: Anchor::BottomLeft,
+                image: textures.pillars.clone(),
                 ..Default::default()
             },
+            Transform::from_xyz(x, (y - PILLAR_HEIGHT / 2.0).round(), 2.0),
         ));
         x += PILLAR_SPACING;
     }
@@ -379,25 +396,18 @@ fn despawn_pillars(mut commands: Commands, pillars: Query<Entity, With<Pillar>>)
 struct Cloud;
 
 fn spawn_clouds(mut commands: Commands, textures: Res<Textures>, mut rng: ResMut<Rng>) {
+    let img = &textures.clouds;
+    let layout = &textures.clouds_layout;
+    let anchor = Anchor::CenterLeft;
+
     let mut x = LEFT;
+
     while x < RIGHT {
         let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
-        commands.spawn((
-            Cloud,
-            SpriteSheetBundle {
-                texture: textures.clouds.clone(),
-                atlas: TextureAtlas {
-                    layout: textures.clouds_layout.clone(),
-                    index: rng.rand_range(0..4) as usize,
-                },
-                transform: Transform::from_xyz(x, y, 0.0),
-                sprite: Sprite {
-                    anchor: Anchor::BottomLeft,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-        ));
+        let index = rng.rand_range(0..4) as usize;
+        let pos = vec3(x, y, 0.0);
+        let spr = mk_sprite(pos, anchor, index, img.clone(), layout.clone());
+        commands.spawn((Cloud, spr));
         x += CLOUD_WIDTH;
     }
 }
@@ -405,12 +415,17 @@ fn spawn_clouds(mut commands: Commands, textures: Res<Textures>, mut rng: ResMut
 fn animate_clouds(
     time: Res<Time>,
     mut rng: ResMut<Rng>,
-    mut query: Query<(&mut Transform, &mut TextureAtlas, &mut Sprite), With<Cloud>>,
+    mut query: Query<(&mut Transform, &mut Sprite), With<Cloud>>,
 ) {
     let dt = time.delta().as_secs_f32();
-    for (mut transform, mut atlas, mut sprite) in query.iter_mut() {
+
+    for (mut transform, mut sprite) in query.iter_mut() {
         *transform = transform.mul_transform(Transform::from_xyz(-30.0 * dt, 0.0, 0.0));
         if transform.translation.x + CLOUD_WIDTH < LEFT {
+            // Get atlas so we can set the index
+            // Using unwrap as we expect all cloud sprites are atlas sprites
+            let atlas = sprite.texture_atlas.as_mut().unwrap();
+
             let y = BOTTOM + 40.0 + rng.rand_range(0..(HEIGHT - 80.0 - CLOUD_HEIGHT) as u32) as f32;
             *transform = Transform::from_xyz(RIGHT, y, 0.0);
             atlas.index = rng.rand_range(0..4) as usize;
@@ -476,5 +491,19 @@ impl Rng {
     fn rand_range(&mut self, range: std::ops::Range<u32>) -> u32 {
         let count = range.end - range.start;
         self.rand() % count + range.start
+    }
+}
+
+pub fn close_on_esc(
+    mut commands: Commands,
+    focused_windows: Query<(Entity, &Window)>,
+    input: Res<ButtonInput<KeyCode>>,
+) {
+    for (window, focus) in focused_windows.iter() {
+        if focus.focused {
+            if input.just_pressed(KeyCode::Escape) {
+                commands.entity(window).despawn();
+            }
+        }
     }
 }

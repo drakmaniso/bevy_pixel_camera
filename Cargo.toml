@@ -1,8 +1,8 @@
 [package]
 name = "bevy_pixel_camera"
-version = "0.13.0"
+version = "0.15.0"
 authors = ["drakmaniso <moussault.laurent@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "A simple pixel-perfect camera plugin for Bevy, suitable for pixel-art"
 readme = "README.md"
 repository = "https://github.com/drakmaniso/bevy_pixel_camera"
@@ -12,25 +12,29 @@ exclude = ["assets/**", ".vscode/**"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bevy = { version = "0.13", default-features = false, features = [
+bevy = { version = "0.15.0", default-features = false, features = [
     "bevy_core_pipeline",
     "bevy_render",
     "bevy_sprite",
+    "bevy_window",
 ] }
 
 [dev-dependencies]
-bevy = { version = "0.13", default-features = false, features = [
+bevy = { version = "0.15.0", default-features = false, features = [
     "bevy_winit",
     "bevy_asset",
+    "bevy_state",
     "png",
-    "multi-threaded",
+    "multi_threaded",
     "x11",
+    "wayland"
 ] }
 
 [[example]]
 name = "flappin"
-required-features = ["bevy/bevy_winit", "bevy/bevy_asset", "bevy/png"]
 
 [[example]]
 name = "mire"
-required-features = ["bevy/bevy_winit", "bevy/bevy_asset", "bevy/png"]
+
+[[example]]
+name = "readme"

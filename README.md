@@ -65,7 +65,7 @@ fn setup(
     asset_server: Res<AssetServer>,
 ) {
     commands.spawn((
-        Camera2dBundle::default(),
+        Camera2d,
         PixelZoom::FitSize {
             width: 320,
             height: 180,
@@ -73,14 +73,12 @@ fn setup(
         PixelViewport,
     ));
 
-    commands.spawn(SpriteBundle {
-        texture: asset_server.load("my-pixel-art-sprite.png"),
-        sprite: Sprite {
+    commands.spawn(
+        Sprite {
+            image: asset_server.load("mire-64x64.png"),
             anchor: Anchor::BottomLeft,
             ..Default::default()
-        },
-        ..Default::default()
-    });
+        });
 }
 ```
 
@@ -94,6 +92,7 @@ cargo run --example flappin
 
 | bevy | bevy_pixel_camera |
 |------|-------------------|
+| 0.15 | 0.15              |
 | 0.13 | 0.13              |
 | 0.12 | 0.12              |
 | 0.11 | 0.5.2             |
@@ -112,6 +111,30 @@ creating the camera bundle (see example above).
 The `PixelCameraBundle` has been deprecated. Replace it with a standard
 `Camera2dBundle`, to which you add the `PixelZoom` and `PixelViewport`
 components.
+
+### Migration guide: 0.12 to 0.15 (Bevy 0.12 to 0.15)
+
+There were a lot of API changes from 0.12 to 0.15 including numerous
+trait method name changes and some functional changes as well.
+
+* Removed `required-features` from examples in Cargo.toml
+* Replaced deprecated `push_children` with `add_children`
+* Changes to work with method changes in `CameraProjection`
+* Changed to work with API renames in `VisibilitySystems`
+* `ScalingMode::WindowSize` changes, zoom no longer held in Enum
+* Flappin Example
+  * Inserted gamestate as a resource
+  * `close_on_esc` deprecated, added own implementation
+  * Arguments to `TextureAtlasLayout::from_grid` updated
+  * Replaced deprecated `Camera2dBundle`  with `Camera2d` component
+  * Removed gamepad code
+    * 0.15 crashes if no gamepad is plugged in
+  * Removed queries for `TextureAtlas` components
+    * `TextureAtlas` are now optional members of `Sprite`
+* Mire Example
+  * Updated for 0.15
+* Added readme example
+    * Duplicate of example code in this file
 
 ## License
 

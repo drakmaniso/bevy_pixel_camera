@@ -64,7 +64,7 @@ pub fn spawn_borders(mut commands: Commands, color: Res<BorderColor>) {
 
     commands
         .spawn((SpatialBundle::default(), Name::new("Borders")))
-        .push_children(&[left, right, top, bottom]);
+        .add_children(&[left, right, top, bottom]);
 }
 
 #[allow(clippy::type_complexity)]

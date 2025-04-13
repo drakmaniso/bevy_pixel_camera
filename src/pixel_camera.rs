@@ -6,7 +6,7 @@ use bevy::prelude::{
     Bundle, Camera2d, Component, EventReader, GlobalTransform, Mat4, Query, Reflect,
     ReflectComponent, Transform, UVec2, With,
 };
-use bevy::render::camera::{Camera, CameraProjection, CameraRenderGraph, Viewport};
+use bevy::render::camera::{Camera, CameraProjection, CameraRenderGraph, Viewport, SubCameraView};
 use bevy::render::primitives::Frustum;
 use bevy::render::view::VisibleEntities;
 use bevy::window::{Window, WindowResized};
@@ -32,8 +32,8 @@ impl PixelCameraBundle {
     pub fn new(pixel_projection: PixelProjection) -> Self {
         let transform = Transform::from_xyz(0.0, 0.0, 0.0);
         let view_projection =
-            pixel_projection.get_projection_matrix() * transform.compute_matrix().inverse();
-        let frustum = Frustum::from_view_projection_custom_far(
+            pixel_projection.get_clip_from_view() * transform.compute_matrix().inverse();
+        let frustum = Frustum::from_clip_from_world_custom_far(
             &view_projection,
             &transform.translation,
             &transform.back(),
@@ -144,7 +144,9 @@ pub struct PixelProjection {
 }
 
 impl CameraProjection for PixelProjection {
-    fn get_projection_matrix(&self) -> Mat4 {
+
+
+    fn get_clip_from_view(&self) -> Mat4 {
         Mat4::orthographic_rh(
             self.left,
             self.right,
@@ -191,6 +193,12 @@ impl CameraProjection for PixelProjection {
             Vec3A::new(self.left, self.top, z_far),      // top left
             Vec3A::new(self.left, self.bottom, z_far),   // bottom left
         ]
+    }
+
+
+    fn get_clip_from_view_for_sub(&self, _sub_view: &SubCameraView) -> Mat4 {
+        println!("This shouldn't be called I think!");
+        self.get_clip_from_view()
     }
 }
 

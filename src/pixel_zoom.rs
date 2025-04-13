@@ -86,12 +86,11 @@ pub(crate) fn pixel_zoom_system(
 
                 let zoom = auto_zoom(pixel_zoom, logical_size) as f32;
                 match projection.scaling_mode {
-                    ScalingMode::WindowSize(previous_zoom) => {
-                        if previous_zoom != zoom {
-                            projection.scaling_mode = ScalingMode::WindowSize(zoom)
-                        }
+                    ScalingMode::WindowSize => {
+                        projection.scale = 1.0 / zoom;
                     }
-                    _ => projection.scaling_mode = ScalingMode::WindowSize(zoom),
+
+                    _ => projection.scaling_mode = ScalingMode::WindowSize,
                 }
 
                 if pixel_viewport.is_some() {
